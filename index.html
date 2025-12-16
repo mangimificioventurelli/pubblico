@@ -19,6 +19,10 @@ body {
 
 <div id="peso">---</div>
 
+<button onclick="sendCmd('start')">START</button>
+<button onclick="sendCmd('stop')">STOP</button>
+<button onclick="sendCmd('tara')">TARA</button>
+  
 <script>
 const url = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/peso.json";
 
@@ -38,6 +42,7 @@ setInterval(aggiorna, 1000);
 
 </body>
 </html>
+
 
 
 
