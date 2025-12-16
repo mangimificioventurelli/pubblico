@@ -1,3 +1,54 @@
+<style>
+body {
+  margin: 0;
+  background: #111;
+  color: #0f0;
+  font-family: system-ui, sans-serif;
+  text-align: center;
+}
+
+#peso {
+  font-size: 72px;
+  margin: 40px 0;
+}
+
+/* contenitore bottoni */
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 20px;
+}
+
+/* bottone base */
+button {
+  font-size: 28px;
+  padding: 28px 0;
+  border: none;
+  border-radius: 18px;
+  background: #2a2a2a;
+  color: #fff;
+  width: 100%;
+  touch-action: manipulation;
+}
+
+/* feedback touch */
+button:active {
+  transform: scale(0.97);
+  background: #444;
+}
+
+/* colori */
+.start { background: #0a7; }
+.stop  { background: #c33; }
+.tara  { background: #555; }
+
+.start:active { background: #0c9; }
+.stop:active  { background: #e44; }
+</style>
+
+
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -19,9 +70,12 @@ body {
 
 <div id="peso">---</div>
 
-<button onclick="sendCmd('start')">START</button>
-<button onclick="sendCmd('stop')">STOP</button>
-<button onclick="sendCmd('tara')">TARA</button>
+<div class="buttons">
+  <button class="start" onclick="sendCmd('start')">START</button>
+  <button class="stop"  onclick="sendCmd('stop')">STOP</button>
+  <button class="tara"  onclick="sendCmd('tara')">TARA</button>
+</div>
+  
   
 <script>
 const url = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/peso.json";
@@ -51,6 +105,7 @@ setInterval(aggiorna, 1000);
 
 </body>
 </html>
+
 
 
 
