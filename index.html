@@ -37,11 +37,21 @@ async function aggiorna() {
   }
 }
 
+async function sendCmd(cmd) {
+  await fetch(base + "/cmd.json", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(cmd)
+  });
+}
+  
+
 setInterval(aggiorna, 1000);
 </script>
 
 </body>
 </html>
+
 
 
 
