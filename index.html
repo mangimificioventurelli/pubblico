@@ -1,100 +1,84 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="it">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bilancia</title>
+
 <style>
-body {
-  background: #111;
-  color: #0f0;
-  font-family: sans-serif;
-  text-align: center;
-}
-#peso {
-  font-size: 72px;
-  margin: 40px 0;
-}
+  body {
+    margin: 0;
+    background: #111;
+    color: #0f0;
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
 
+  #peso {
+    font-size: 64px;
+    margin: 40px 0;
+  }
 
-/* contenitore bottoni */
-.buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 0 20px;
-}
+  button {
+    width: 90%;
+    max-width: 400px;
+    font-size: 28px;
+    padding: 20px;
+    margin: 15px auto;
+    display: block;
+    border-radius: 12px;
+    border: none;
+  }
 
-/* bottone base */
-button {
-  font-size: 28px;
-  padding: 28px 0;
-  border: none;
-  border-radius: 18px;
-  background: #2a2a2a;
-  color: #fff;
-  width: 100%;
-  touch-action: manipulation;
-}
-
-/* feedback touch */
-button:active {
-  transform: scale(0.97);
-  background: #444;
-}
-
-/* colori */
-.start { background: #0a7; }
-.stop  { background: #c33; }
-.tara  { background: #555; }
-
-.start:active { background: #0c9; }
-.stop:active  { background: #e44; }
+  .start { background: #00aa00; color: #fff; }
+  .stop  { background: #cc0000; color: #fff; }
+  .reset { background: #444; color: #fff; }
 </style>
-  
 </head>
+
 <body>
 
 <div id="peso">---</div>
 
-<div class="buttons">
-  <button class="start" onclick="sendCmd('start')">START</button>
-  <button class="stop"  onclick="sendCmd('stop')">STOP</button>
-  <button class="tara"  onclick="sendCmd('reset')">RESET</button>
-</div>
-  
-  
+<button class="start" onclick="sendCmd('start')">START</button>
+<button class="stop"  onclick="sendCmd('stop')">STOP</button>
+<button class="reset" onclick="sendCmd('reset')">RESET ALLARMI</button>
+
 <script>
-  
-const url = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/peso.json";
+const BASE = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+const PESO_URL = BASE + "/peso.json";
+const CMD_URL  = BASE + "/cmd.json";
 
 let lock = false;
 
-async function aggiorna() {
+/* ===== LETTURA PESO REALTIME ===== */
+async function aggiornaPeso() {
   try {
-    const r = await fetch(url);
+    const r = await fetch(PESO_URL);
     const peso = await r.json();
-    console.log("PESO:", peso);
-    document.getElementById("peso").innerText = peso;
-  } catch (e) {
-    document.getElementById("peso").innerText = "ERRORE";
-  }
+    if (peso !== null && peso !== "") {
+      document.getElementById("peso").innerText = peso;
+    }
+  } catch (e) {}
 }
+setInterval(aggiornaPeso, 500);
 
+/* ===== INVIO COMANDI ===== */
 async function sendCmd(cmd) {
   if (lock) return;
   lock = true;
 
   if (navigator.vibrate) navigator.vibrate(30);
 
-  await fetch(base + "/cmd.json", {
+  await fetch(CMD_URL, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(cmd)
   });
 
-  // reset comando (fondamentale)
+  // pulizia comando dopo 300 ms
   setTimeout(async () => {
-    await fetch(base + "/cmd.json", {
+    await fetch(CMD_URL, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify("")
@@ -102,13 +86,12 @@ async function sendCmd(cmd) {
     lock = false;
   }, 300);
 }
-  
-
-setInterval(aggiorna, 1000);
 </script>
 
 </body>
 </html>
+
+
 
 
 
