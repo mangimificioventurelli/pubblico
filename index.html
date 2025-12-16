@@ -1,11 +1,5 @@
 <!DOCTYPE html>
 
-
-
-
-
-
-
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -70,9 +64,10 @@ button:active {
   
   
 <script>
-
   
 const url = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/peso.json";
+
+let lock = false;
 
 async function aggiorna() {
   try {
@@ -86,11 +81,20 @@ async function aggiorna() {
 }
 
 async function sendCmd(cmd) {
+  if (lock) return;
+  lock = true;
+
+  // vibrazione (se supportata)
+  if (navigator.vibrate) navigator.vibrate(30);
+
   await fetch(base + "/cmd.json", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(cmd)
   });
+
+  // sblocco dopo 1 secondo
+  setTimeout(() => lock = false, 1000);
 }
   
 
@@ -99,6 +103,7 @@ setInterval(aggiorna, 1000);
 
 </body>
 </html>
+
 
 
 
