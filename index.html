@@ -20,19 +20,25 @@ body {
 <div id="peso">---</div>
 
 <script>
-const url = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/index.json";
+const url = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/peso.json";
 
 async function aggiorna() {
-  const r = await fetch(url);
-  const peso = await r.json();
-  document.getElementById("peso").innerText = peso ?? "---";
+  try {
+    const r = await fetch(url);
+    const peso = await r.json();
+    console.log("PESO:", peso);
+    document.getElementById("peso").innerText = peso;
+  } catch (e) {
+    document.getElementById("peso").innerText = "ERRORE";
+  }
 }
 
-setInterval(aggiorna, 500);
+setInterval(aggiorna, 1000);
 </script>
 
 </body>
 </html>
+
 
 
 
