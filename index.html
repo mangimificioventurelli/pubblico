@@ -84,7 +84,6 @@ async function sendCmd(cmd) {
   if (lock) return;
   lock = true;
 
-  // vibrazione (se supportata)
   if (navigator.vibrate) navigator.vibrate(30);
 
   await fetch(base + "/cmd.json", {
@@ -93,8 +92,15 @@ async function sendCmd(cmd) {
     body: JSON.stringify(cmd)
   });
 
-  // sblocco dopo 1 secondo
-  setTimeout(() => lock = false, 1000);
+  // reset comando (fondamentale)
+  setTimeout(async () => {
+    await fetch(base + "/cmd.json", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify("")
+    });
+    lock = false;
+  }, 300);
 }
   
 
@@ -103,6 +109,7 @@ setInterval(aggiorna, 1000);
 
 </body>
 </html>
+
 
 
 
