@@ -76,20 +76,13 @@ async function sendCmd(cmd) {
     body: JSON.stringify(cmd)
   });
 
-  // pulizia comando dopo 300 ms
-  setTimeout(async () => {
-    await fetch(CMD_URL, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify("")
-    });
-    lock = false;
-  }, 300);
+  setTimeout(() => lock = false, 1000);
 }
 </script>
 
 </body>
 </html>
+
 
 
 
