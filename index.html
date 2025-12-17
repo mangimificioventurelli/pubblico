@@ -44,7 +44,9 @@
 <button class="stop"  onclick="sendCmd('stop')">STOP</button>
 <button class="reset" onclick="sendCmd('reset')">RESET ALLARMI</button>
 
-<div id="stato">STATO: --</div>
+<div id="stato" style="font-size:40px;font-weight:bold;">
+  ---
+</div>
 
 <script>
 const BASE = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
@@ -81,8 +83,11 @@ async function sendCmd(cmd) {
   setTimeout(() => lock = false, 1000);
 }
 
-const statoUrl = base + "/stato.json";
+/* const statoUrl = base + "/stato.json"; */
 
+  const statoUrl =
+  "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/stato.json";
+  
 setInterval(async () => {
   const r = await fetch(statoUrl);
   const stato = await r.json();
@@ -95,6 +100,7 @@ setInterval(async () => {
 
 </body>
 </html>
+
 
 
 
