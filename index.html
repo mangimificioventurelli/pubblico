@@ -83,7 +83,7 @@ button:active {
 
   <div class="buttons">
     <button class="btn-start" onclick="sendCmd('start')">START</button>
-    <button class="btn-stop" onclick="sendCmd('stop')">STOP</button>
+    <button class="btn-stop" onclick="stopCmd()">STOP</button>
     <button class="btn-reset" onclick="sendCmd('reset')">RESET ALLARMI</button>
   </div>
 
@@ -135,12 +135,31 @@ setInterval(async () => {
   if (stato) {
     document.getElementById("stato").innerText = "STATO: " + stato;
   }
-}, 1000);  
+}, 1000); 
+
+
+  async function stopCmd() {
+  if (lock) return;
+
+  if (!window.stopArmed) {
+    window.stopArmed = true;
+    await sendCmd("stop");
+    return;
+  }
+
+  // secondo stop → conferma
+  if (confirm("Confermi STOP macchina?")) {
+    await sendCmd("stop_confirm");
+  }
+
+  window.stopArmed = false;
+}
   
 </script>
 
 </body>
 </html>
+
 
 
 
