@@ -89,6 +89,8 @@ button:active {
 
 </div>
 
+<ul id="lista"></ul>  
+
 <script>
 const BASE = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
 const PESO_URL = BASE + "/peso.json";
@@ -154,11 +156,34 @@ setInterval(async () => {
 
   window.stopArmed = false;
 }
+
+setInterval(async () => {
+  const r = await fetch(base + "/partenza/lista.json");
+  const lista = await r.json();
+  if (!lista) return;
+
+  const ul = document.getElementById("lista");
+  ul.innerHTML = "";
+
+  lista.forEach(voce => {
+    const li = document.createElement("li");
+    li.innerText = voce.testo;
+    li.onclick = () => {
+      fetch(base + "/partenza/select.json", {
+        method: "PUT",
+        body: JSON.stringify(voce.idx)
+      });
+    };
+    ul.appendChild(li);
+  });
+}, 1000);
+  
   
 </script>
 
 </body>
 </html>
+
 
 
 
