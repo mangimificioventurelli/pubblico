@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Lista Partenza Debug</title>
+<style>
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid black; padding: 5px; text-align: left; }
+  tr:hover { background-color: #ddd; cursor: pointer; }
+</style>
+</head>
+<body>
+<h2>Lista Partenza</h2>
+<table id="tabellaPartenza">
+  <thead>
+    <tr><th>Indice</th><th>Testo</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+const firebaseBase = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/";
+const prodottoDest = "GRANTURCO"; // esempio, poi lo passerai dinamicamente
+
+fetch(firebaseBase + "/partenza/lista.json")
+  .then(r => r.json())
+  .then(lista => {
+    console.log("Lista ricevuta da Firebase:", lista); // debug
+    const tbody = document.querySelector("#tabellaPartenza tbody");
+    lista.forEach(item => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${item.idx}</td><td>${item.testo}</td>`;
+      tr.addEventListener("click", () => {
+        console.log("Hai cliccato su:", item);
+        // invio indice selezionato a Firebase
+        fetch(firebaseBase + "/partenza/select.json", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item.idx)
+        }).then(r => console.log("Selezione inviata:", r.status));
+      });
+      tbody.appendChild(tr);
+    });
+  })
+  .catch(e => console.error("Errore fetch:", e));
+</script>
+</body>
+</html>
