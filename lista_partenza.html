@@ -4,110 +4,93 @@
 <meta charset="UTF-8">
 <title>Selezione Partenza</title>
 <style>
-  table { border-collapse: collapse; width: 100%; }
-  th, td { border: 1px solid #ccc; padding: 5px; text-align: left; }
-  tr.selected { background-color: #ffa; }
+body { font-family: Arial, sans-serif; margin: 20px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+th { background-color: #f0f0f0; }
+tr:hover { background-color: #e0f7ff; cursor: pointer; }
+.selected { background-color: #a0e0a0 !important; }
 </style>
 </head>
 <body>
-
-<h2>Lista Estrattori Partenza</h2>
-
-<label>Filtra per prodotto: <input type="text" id="filtroProdotto"></label>
-<table id="tabella">
-  <thead>
-    <tr>
-      <th>Indice</th>
-      <th>Testo</th>
-      <th>Prodotto</th>
-      <th>Estrattore</th>
-    </tr>
-  </thead>
-  <tbody>
-    <!-- righe generate dinamicamente -->
-  </tbody>
+<h2>Lista Estrattori - Filtrata per prodotto</h2>
+<table id="listaPartenza">
+<thead>
+<tr>
+<th>Indice</th>
+<th>Testo</th>
+<th>Prodotto</th>
+<th>Estrattore</th>
+</tr>
+</thead>
+<tbody></tbody>
 </table>
 
-<button id="invia">Invia selezione a Firebase</button>
-
 <script>
-const firebaseBase = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/";
-let listaPartenza = [];
-let rigaSelezionata = null;
+const firebaseBase = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/"; // cambia con il tuo URL
+let listaCompleta = [];
+let prodottoDest = "";
 
-// Carica lista da Firebase
-async function caricaLista() {
-  try {
-    const res = await fetch(`${firebaseBase}/partenza/lista.json`);
-    const data = await res.json();
-
-    listaPartenza = [];
-    for (let i in data) {
-      const item = data[i];
-      // estrattore = prime 2 cifre della colonna testo
-      const estrattore = item.testo.split(" ")[0].replace(/\D/g,"");
-      listaPartenza.push({
-    idx: item.idx,
-    testo: item.testo,
-    prodotto: item.testo.split(" ").slice(2).join(" "), // tutto tranne indice ed estrattore
-    estrattore: item.testo.split(" ")[0].replace(/\D/g,"")
-});
-    }
-
-    mostraTabella(listaPartenza);
-  } catch(e) {
-    console.error("Errore caricamento lista:", e);
-  }
+// Legge il prodottoDest da Firebase
+async function fetchProdottoDest() {
+    const resp = await fetch(`${firebaseBase}/destinazione/prodotto.json`);
+    prodottoDest = await resp.text();
+    prodottoDest = prodottoDest.replace(/"/g,""); // pulizia stringa
 }
 
-// Mostra tabella filtrando per input
-function mostraTabella(lista) {
-  const tbody = document.querySelector("#tabella tbody");
-  tbody.innerHTML = "";
-  const filtro = document.querySelector("#filtroProdotto").value.toUpperCase();
-
-  lista.forEach(item => {
-    if (filtro && !item.prodotto.toUpperCase().includes(filtro)) return;
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${item.idx}</td>
-                    <td>${item.testo}</td>
-                    <td>${item.prodotto}</td>
-                    <td>${item.estrattore}</td>`;
-    tr.onclick = () => {
-      document.querySelectorAll("tr.selected").forEach(r => r.classList.remove("selected"));
-      tr.classList.add("selected");
-      rigaSelezionata = item.idx;
-    };
-    tbody.appendChild(tr);
-  });
+// Legge la lista completa da Firebase
+async function fetchListaPartenza() {
+    const resp = await fetch(`${firebaseBase}/partenza/lista.json`);
+    const data = await resp.json();
+    listaCompleta = data || [];
 }
 
-// Filtro dinamico
-document.querySelector("#filtroProdotto").addEventListener("input", () => {
-  mostraTabella(listaPartenza);
-});
+// Mostra la tabella filtrata
+function renderTable() {
+    const tbody = document.querySelector("#listaPartenza tbody");
+    tbody.innerHTML = "";
 
-// Invio selezione a Firebase
-document.querySelector("#invia").addEventListener("click", async () => {
-  if (rigaSelezionata === null) {
-    alert("Seleziona una riga!");
-    return;
-  }
-  try {
-    await fetch(`${firebaseBase}/partenza/select.json`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(rigaSelezionata)
+    const filtrata = listaCompleta.filter(item => item.prodotto.includes(prodottoDest));
+
+    filtrata.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${item.idx}</td>
+            <td>${item.testo}</td>
+            <td>${item.prodotto}</td>
+            <td>${item.estrattore}</td>
+        `;
+        tr.addEventListener("click", () => selectItem(item.idx, tr));
+        tbody.appendChild(tr);
     });
-    alert("Selezione inviata a Firebase: " + rigaSelezionata);
-  } catch(e) {
-    console.error("Errore invio Firebase:", e);
-  }
-});
+}
 
-caricaLista();
+// Invia indice selezionato a Firebase
+async function selectItem(idx, tr) {
+    document.querySelectorAll("tr.selected").forEach(r => r.classList.remove("selected"));
+    tr.classList.add("selected");
+
+    await fetch(`${firebaseBase}/partenza/select.json`, {
+        method: "PUT",
+        body: JSON.stringify(idx)
+    });
+}
+
+// Ciclo iniziale: prendi prodottoDest → lista → render tabella
+async function init() {
+    await fetchProdottoDest();
+    await fetchListaPartenza();
+    renderTable();
+}
+
+// Aggiorna tabella ogni 3 secondi in caso di cambio Firebase
+setInterval(async () => {
+    await fetchProdottoDest();
+    await fetchListaPartenza();
+    renderTable();
+}, 3000);
+
+init();
 </script>
-
 </body>
 </html>
