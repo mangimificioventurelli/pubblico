@@ -2,90 +2,78 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Selezione Partenza</title>
+<title>Lista Partenza</title>
 <style>
-  body { font-family: Arial, sans-serif; padding: 20px; }
-  table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-  tr:hover { background-color: #f0f0f0; cursor: pointer; }
-  .selected { background-color: #cce5ff !important; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #333; padding: 5px; text-align: left; }
+  tr.selected { background-color: #8f8; }
 </style>
 </head>
 <body>
 
-<h2>Lista Estrattori Partenza</h2>
-<label>Filtra per prodotto: <span id="prodottoDest"></span></label>
-<table id="listaPartenza">
+<label>Filtra per prodotto: </label>
+<input type="text" id="filtroProdotto" placeholder="Digita prodotto">
+
+<table id="tabellaPartenza">
   <thead>
-    <tr><th>Indice</th><th>Testo</th></tr>
+    <tr><th>Indice</th><th>Testo</th><th>Prodotto</th></tr>
   </thead>
   <tbody></tbody>
 </table>
 
 <script>
 const firebaseBase = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/";
-let prodottoDest = "";
+const listaUrl = firebaseBase + "/partenza/lista.json";
 
-// Funzione per leggere il prodotto selezionato da Firebase
-async function fetchProdottoDest() {
-  try {
-    const res = await fetch(firebaseBase + "/dest/select.json");
-    const data = await res.json();
-    if(data) {
-      prodottoDest = data; // se il JSON è solo il nome del prodotto
-      document.getElementById("prodottoDest").innerText = prodottoDest;
-      loadListaPartenza();
-    }
-  } catch(e) {
-    console.error("Errore fetch prodottoDest:", e);
-  }
-}
-
-// Carica lista partenza e mostra tabella
-async function loadListaPartenza() {
-  try {
-    const res = await fetch(firebaseBase + "/partenza/lista.json");
-    const lista = await res.json();
-    const tbody = document.querySelector("#listaPartenza tbody");
+async function caricaLista() {
+    const r = await fetch(listaUrl);
+    const lista = await r.json();
+    const tbody = document.querySelector("#tabellaPartenza tbody");
     tbody.innerHTML = "";
 
-    lista.forEach(item => {
-      // Se prodottoDest non è vuoto, filtriamo
-      if(!prodottoDest || item.testo.includes(prodottoDest)) {
+    for (const item of lista) {
+        // parsing prodotto dalla riga di testo
+        const parti = item.testo.split(" ");
+        const prodotto = parti.slice(2).join(" ");
+        
         const tr = document.createElement("tr");
         tr.dataset.idx = item.idx;
-        tr.innerHTML = `<td>${item.idx}</td><td>${item.testo}</td>`;
-        tr.addEventListener("click", () => selezionaVoce(item.idx, tr));
+        tr.dataset.prodotto = prodotto;
+        tr.innerHTML = `<td>${item.idx}</td><td>${item.testo}</td><td>${prodotto}</td>`;
         tbody.appendChild(tr);
-      }
-    });
-  } catch(e) {
-    console.error("Errore fetch listaPartenza:", e);
-  }
+    }
 }
 
-// Invia l’indice selezionato a Firebase
-async function selezionaVoce(idx, row) {
-  document.querySelectorAll("#listaPartenza tr").forEach(r => r.classList.remove("selected"));
-  row.classList.add("selected");
+function filtraLista() {
+    const filtro = document.getElementById("filtroProdotto").value.toUpperCase();
+    const rows = document.querySelectorAll("#tabellaPartenza tbody tr");
 
-  try {
-    await fetch(firebaseBase + "/partenza/select.json", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(idx)
+    rows.forEach(row => {
+        const prod = row.dataset.prodotto.toUpperCase();
+        row.style.display = prod.includes(filtro) ? "" : "none";
     });
-  } catch(e) {
-    console.error("Errore invio indice:", e);
-  }
 }
 
-// Primo caricamento
-fetchProdottoDest();
+function selezionaElemento(tr) {
+    document.querySelectorAll("#tabellaPartenza tbody tr").forEach(r => r.classList.remove("selected"));
+    tr.classList.add("selected");
 
-// Aggiornamento automatico ogni 2 secondi
-setInterval(fetchProdottoDest, 2000);
+    const idx = tr.dataset.idx;
+    // invio indice selezionato a Firebase
+    fetch(firebaseBase + "/partenza/select.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(idx)
+    });
+}
+
+document.getElementById("filtroProdotto").addEventListener("input", filtraLista);
+document.querySelector("#tabellaPartenza tbody").addEventListener("click", e => {
+    let tr = e.target.closest("tr");
+    if (tr) selezionaElemento(tr);
+});
+
+caricaLista();
 </script>
-
 </body>
 </html>
