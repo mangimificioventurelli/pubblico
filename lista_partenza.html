@@ -45,6 +45,20 @@ async function loadPartenza() {
   }
 }
 
+ // separare il prodotto dalla stringa 
+fetch(listaUrl)
+  .then(res => res.json())
+  .then(lista => {
+      // Aggiungo campo prodotto estraendolo dal testo
+      lista.forEach(item => {
+          let parti = item.testo.split(" ");
+          item.prodotto = parti.slice(2).join(" ");
+      });
+
+      // Filtro per prodotto selezionato
+      let filtrata = lista.filter(item => item.prodotto.includes(prodottoSelezionato));
+  
+
 // FUNZIONE per filtrare per prodotto
 function filterByProdotto(prodotto) {
   if (!prodotto) {
