@@ -33,6 +33,15 @@ const firebaseBase = "https://travasoventurelli-default-rtdb.europe-west1.fireba
 const tabella = document.getElementById("tabella-lista").querySelector("tbody");
 const inputFiltro = document.getElementById("filtroProdotto");
 
+function estraiProdotto(testo) {
+    // Esempio semplice: prende tutto dopo il terzo spazio
+    const parti = testo.split(" ");
+    if (parti.length >= 4) {
+        return parti.slice(3).join(" ");
+    }
+    return testo;
+}
+
 async function aggiornaLista() {
     try {
         const r = await fetch(firebaseBase + "/partenza/lista.json");
@@ -44,15 +53,15 @@ async function aggiornaLista() {
         tabella.innerHTML = ""; // Pulisce la tabella
 
         lista.forEach(item => {
-            // Se prodotto non esiste in Firebase, usiamo testo completo come fallback
-            const prodotto = item.prodotto || item.testo;
+            const testo = item.testo;
+            const prodotto = estraiProdotto(testo);
 
             if (filtro === "" || prodotto.toUpperCase().includes(filtro)) {
                 const tr = document.createElement("tr");
                 const tdTesto = document.createElement("td");
                 const tdProdotto = document.createElement("td");
 
-                tdTesto.innerText = item.testo;
+                tdTesto.innerText = testo;
                 tdProdotto.innerText = prodotto;
 
                 tr.appendChild(tdTesto);
