@@ -1,4 +1,20 @@
-<table id="tabellaPartenza">
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Selezione Partenza</title>
+<style>
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #ccc; padding: 5px; text-align: left; }
+  tr.selected { background-color: #ffa; }
+</style>
+</head>
+<body>
+
+<h2>Lista Estrattori Partenza</h2>
+
+<label>Filtra per prodotto: <input type="text" id="filtroProdotto"></label>
+<table id="tabella">
   <thead>
     <tr>
       <th>Indice</th>
@@ -7,60 +23,91 @@
       <th>Estrattore</th>
     </tr>
   </thead>
-  <tbody></tbody>
+  <tbody>
+    <!-- righe generate dinamicamente -->
+  </tbody>
 </table>
+
+<button id="invia">Invia selezione a Firebase</button>
 
 <script>
 const firebaseBase = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/";
-const listaUrl = firebaseBase + "/partenza/lista.json";
+let listaPartenza = [];
+let rigaSelezionata = null;
 
+// Carica lista da Firebase
 async function caricaLista() {
-    const r = await fetch(listaUrl);
-    const lista = await r.json();
-    const tbody = document.querySelector("#tabellaPartenza tbody");
-    tbody.innerHTML = "";
+  try {
+    const res = await fetch(`${firebaseBase}/partenza/lista.json`);
+    const data = await res.json();
 
-    for (const item of lista) {
-        const parti = item.testo.split(" ");
-        const prodotto = parti.slice(2).join(" ");
-        const estrattore = parti[1].replace(/\D/g, ""); // prende solo i numeri della seconda colonna
-
-        const tr = document.createElement("tr");
-        tr.dataset.idx = item.idx;
-        tr.dataset.prodotto = prodotto;
-        tr.dataset.estrattore = estrattore;
-        tr.innerHTML = `<td>${item.idx}</td><td>${item.testo}</td><td>${prodotto}</td><td>${estrattore}</td>`;
-        tbody.appendChild(tr);
+    listaPartenza = [];
+    for (let i in data) {
+      const item = data[i];
+      // estrattore = prime 2 cifre della colonna testo
+      const estrattore = item.testo.split(" ")[0].replace(/\D/g,"");
+      listaPartenza.push({
+        idx: item.idx,
+        testo: item.testo,
+        prodotto: item.prodotto,
+        estrattore: estrattore
+      });
     }
+
+    mostraTabella(listaPartenza);
+  } catch(e) {
+    console.error("Errore caricamento lista:", e);
+  }
 }
 
-function filtraLista() {
-    const filtro = document.getElementById("filtroProdotto").value.toUpperCase();
-    const rows = document.querySelectorAll("#tabellaPartenza tbody tr");
-    rows.forEach(row => {
-        const prod = row.dataset.prodotto.toUpperCase();
-        row.style.display = prod.includes(filtro) ? "" : "none";
+// Mostra tabella filtrando per input
+function mostraTabella(lista) {
+  const tbody = document.querySelector("#tabella tbody");
+  tbody.innerHTML = "";
+  const filtro = document.querySelector("#filtroProdotto").value.toUpperCase();
+
+  lista.forEach(item => {
+    if (filtro && !item.prodotto.toUpperCase().includes(filtro)) return;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${item.idx}</td>
+                    <td>${item.testo}</td>
+                    <td>${item.prodotto}</td>
+                    <td>${item.estrattore}</td>`;
+    tr.onclick = () => {
+      document.querySelectorAll("tr.selected").forEach(r => r.classList.remove("selected"));
+      tr.classList.add("selected");
+      rigaSelezionata = item.idx;
+    };
+    tbody.appendChild(tr);
+  });
+}
+
+// Filtro dinamico
+document.querySelector("#filtroProdotto").addEventListener("input", () => {
+  mostraTabella(listaPartenza);
+});
+
+// Invio selezione a Firebase
+document.querySelector("#invia").addEventListener("click", async () => {
+  if (rigaSelezionata === null) {
+    alert("Seleziona una riga!");
+    return;
+  }
+  try {
+    await fetch(`${firebaseBase}/partenza/select.json`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(rigaSelezionata)
     });
-}
-
-function selezionaElemento(tr) {
-    document.querySelectorAll("#tabellaPartenza tbody tr").forEach(r => r.classList.remove("selected"));
-    tr.classList.add("selected");
-
-    const estrattore = tr.dataset.estrattore;
-    // invio estrattore selezionato a Firebase per AHK
-    fetch(firebaseBase + "/partenza/select.json", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(estrattore)
-    });
-}
-
-document.getElementById("filtroProdotto").addEventListener("input", filtraLista);
-document.querySelector("#tabellaPartenza tbody").addEventListener("click", e => {
-    let tr = e.target.closest("tr");
-    if (tr) selezionaElemento(tr);
+    alert("Selezione inviata a Firebase: " + rigaSelezionata);
+  } catch(e) {
+    console.error("Errore invio Firebase:", e);
+  }
 });
 
 caricaLista();
 </script>
+
+</body>
+</html>
