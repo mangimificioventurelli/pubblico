@@ -47,11 +47,11 @@ async function caricaLista() {
       // estrattore = prime 2 cifre della colonna testo
       const estrattore = item.testo.split(" ")[0].replace(/\D/g,"");
       listaPartenza.push({
-        idx: item.idx,
-        testo: item.testo,
-        prodotto: item.prodotto,
-        estrattore: estrattore
-      });
+    idx: item.idx,
+    testo: item.testo,
+    prodotto: item.testo.split(" ").slice(2).join(" "), // tutto tranne indice ed estrattore
+    estrattore: item.testo.split(" ")[0].replace(/\D/g,"")
+});
     }
 
     mostraTabella(listaPartenza);
