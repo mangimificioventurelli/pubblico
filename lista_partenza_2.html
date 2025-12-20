@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Selezione Partenza</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+  tr:hover { background-color: #f0f0f0; cursor: pointer; }
+  .selected { background-color: #cce5ff !important; }
+</style>
+</head>
+<body>
+
+<h2>Lista Estrattori Partenza</h2>
+<label>Filtra per prodotto: <span id="prodottoDest"></span></label>
+<table id="listaPartenza">
+  <thead>
+    <tr><th>Indice</th><th>Testo</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+const firebaseBase = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/";
+let prodottoDest = ""; // Lo puoi impostare dinamicamente via Firebase o input
+
+// Funzione per leggere il prodotto selezionato da Firebase
+async function fetchProdottoDest() {
+  const res = await fetch(firebaseBase + "/dest/select.json");
+  const data = await res.json();
+  if(data && data.prodotto) {
+    prodottoDest = data.prodotto;
+    document.getElementById("prodottoDest").innerText = prodottoDest;
+    loadListaPartenza();
+  }
+}
+
+// Carica lista partenza, filtra per prodotto e mostra tabella
+async function loadListaPartenza() {
+  const res = await fetch(firebaseBase + "/partenza/lista.json");
+  const lista = await res.json();
+  const tbody = document.querySelector("#listaPartenza tbody");
+  tbody.innerHTML = "";
+
+  lista.forEach(item => {
+    if(item.testo.includes(prodottoDest)) { // filtro semplice, puoi migliorare
+      const tr = document.createElement("tr");
+      tr.dataset.idx = item.idx;
+      tr.innerHTML = `<td>${item.idx}</td><td>${item.testo}</td>`;
+      tr.addEventListener("click", () => selezionaVoce(item.idx, tr));
+      tbody.appendChild(tr);
+    }
+  });
+}
+
+// Invia l’indice selezionato a Firebase
+async function selezionaVoce(idx, row) {
+  // evidenzia selezione
+  document.querySelectorAll("#listaPartenza tr").forEach(r => r.classList.remove("selected"));
+  row.classList.add("selected");
+
+  await fetch(firebaseBase + "/partenza/select.json", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(idx)
+  });
+}
+
+fetchProdottoDest();
+
+// Opzionale: aggiorna prodottoDest ogni X secondi
+setInterval(fetchProdottoDest, 2000);
+</script>
+
+</body>
+</html>
