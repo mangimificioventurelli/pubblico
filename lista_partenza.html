@@ -1,22 +1,11 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-<meta charset="UTF-8">
-<title>Lista Partenza</title>
-<style>
-  table { border-collapse: collapse; width: 100%; }
-  th, td { border: 1px solid #333; padding: 5px; text-align: left; }
-  tr.selected { background-color: #8f8; }
-</style>
-</head>
-<body>
-
-<label>Filtra per prodotto: </label>
-<input type="text" id="filtroProdotto" placeholder="Digita prodotto">
-
 <table id="tabellaPartenza">
   <thead>
-    <tr><th>Indice</th><th>Testo</th><th>Prodotto</th></tr>
+    <tr>
+      <th>Indice</th>
+      <th>Testo</th>
+      <th>Prodotto</th>
+      <th>Estrattore</th>
+    </tr>
   </thead>
   <tbody></tbody>
 </table>
@@ -32,14 +21,15 @@ async function caricaLista() {
     tbody.innerHTML = "";
 
     for (const item of lista) {
-        // parsing prodotto dalla riga di testo
         const parti = item.testo.split(" ");
         const prodotto = parti.slice(2).join(" ");
-        
+        const estrattore = parti[1].replace(/\D/g, ""); // prende solo i numeri della seconda colonna
+
         const tr = document.createElement("tr");
         tr.dataset.idx = item.idx;
         tr.dataset.prodotto = prodotto;
-        tr.innerHTML = `<td>${item.idx}</td><td>${item.testo}</td><td>${prodotto}</td>`;
+        tr.dataset.estrattore = estrattore;
+        tr.innerHTML = `<td>${item.idx}</td><td>${item.testo}</td><td>${prodotto}</td><td>${estrattore}</td>`;
         tbody.appendChild(tr);
     }
 }
@@ -47,7 +37,6 @@ async function caricaLista() {
 function filtraLista() {
     const filtro = document.getElementById("filtroProdotto").value.toUpperCase();
     const rows = document.querySelectorAll("#tabellaPartenza tbody tr");
-
     rows.forEach(row => {
         const prod = row.dataset.prodotto.toUpperCase();
         row.style.display = prod.includes(filtro) ? "" : "none";
@@ -58,12 +47,12 @@ function selezionaElemento(tr) {
     document.querySelectorAll("#tabellaPartenza tbody tr").forEach(r => r.classList.remove("selected"));
     tr.classList.add("selected");
 
-    const idx = tr.dataset.idx;
-    // invio indice selezionato a Firebase
+    const estrattore = tr.dataset.estrattore;
+    // invio estrattore selezionato a Firebase per AHK
     fetch(firebaseBase + "/partenza/select.json", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(idx)
+        body: JSON.stringify(estrattore)
     });
 }
 
@@ -75,5 +64,3 @@ document.querySelector("#tabellaPartenza tbody").addEventListener("click", e => 
 
 caricaLista();
 </script>
-</body>
-</html>
