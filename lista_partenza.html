@@ -2,103 +2,75 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Selezione Partenza</title>
+<title>Lista Partenze</title>
 <style>
-  body { font-family: sans-serif; margin: 20px; background:#f0f0f0; }
-  table { border-collapse: collapse; width: 100%; background:#fff; }
-  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-  th { background: #eee; }
-  tr:hover { background: #d0e0ff; cursor: pointer; }
-  #filtro { margin-bottom: 10px; padding:5px; width: 200px; }
+  body { font-family: sans-serif; padding: 20px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+  th, td { border: 1px solid #333; padding: 6px 10px; text-align: left; }
+  th { background-color: #eee; }
+  tr:nth-child(even) { background-color: #f9f9f9; }
 </style>
 </head>
 <body>
 
-<h2>Lista Estrattori Partenza</h2>
+<h2>Lista Partenze</h2>
+<label>Filtra per prodotto: 
+  <input type="text" id="filtroProdotto" placeholder="Inserisci prodotto..." />
+</label>
 
-<input id="filtro" type="text" placeholder="Filtra per prodotto...">
-
-<table id="partenzaTable">
+<table id="tabella-lista">
   <thead>
     <tr>
-      <th>Indice</th>
       <th>Testo</th>
       <th>Prodotto</th>
     </tr>
   </thead>
-  <tbody>
-  </tbody>
+  <tbody></tbody>
 </table>
 
 <script>
-const firebaseBase = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
-let listaPartenza = [];
+const firebaseBase = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/"; // Cambia con il tuo progetto
+const tabella = document.getElementById("tabella-lista").querySelector("tbody");
+const inputFiltro = document.getElementById("filtroProdotto");
 
-// FUNZIONE per leggere lista da Firebase
-async function loadPartenza() {
-  try {
-    const r = await fetch(firebaseBase + "/partenza/lista.json");
-    listaPartenza = await r.json() || [];
-    renderTable(listaPartenza);
-  } catch (e) {
-    console.error("Errore caricamento lista:", e);
-  }
+async function aggiornaLista() {
+    try {
+        const r = await fetch(firebaseBase + "/partenza/lista.json");
+        const lista = await r.json();
+        if (!lista) return;
+
+        const filtro = inputFiltro.value.toUpperCase();
+
+        tabella.innerHTML = ""; // Pulisce la tabella
+
+        lista.forEach(item => {
+            // Se prodotto non esiste in Firebase, usiamo testo completo come fallback
+            const prodotto = item.prodotto || item.testo;
+
+            if (filtro === "" || prodotto.toUpperCase().includes(filtro)) {
+                const tr = document.createElement("tr");
+                const tdTesto = document.createElement("td");
+                const tdProdotto = document.createElement("td");
+
+                tdTesto.innerText = item.testo;
+                tdProdotto.innerText = prodotto;
+
+                tr.appendChild(tdTesto);
+                tr.appendChild(tdProdotto);
+                tabella.appendChild(tr);
+            }
+        });
+
+    } catch (e) {
+        console.error("Errore nel fetch Firebase:", e);
+    }
 }
 
- // separare il prodotto dalla stringa 
-fetch(listaUrl)
-  .then(res => res.json())
-  .then(lista => {
-      // Aggiungo campo prodotto estraendolo dal testo
-      lista.forEach(item => {
-          let parti = item.testo.split(" ");
-          item.prodotto = parti.slice(2).join(" ");
-      });
+// Aggiorna ogni secondo
+setInterval(aggiornaLista, 1000);
 
-      // Filtro per prodotto selezionato
-      let filtrata = lista.filter(item => item.prodotto.includes(prodottoSelezionato));
-  
-
-// FUNZIONE per filtrare per prodotto
-function filterByProdotto(prodotto) {
-  if (!prodotto) {
-    renderTable(listaPartenza);
-    return;
-  }
-  const filtrata = listaPartenza.filter(item => item.prodotto.includes(prodotto));
-  renderTable(filtrata);
-}
-
-// FUNZIONE per mostrare tabella
-function renderTable(arr) {
-  const tbody = document.querySelector("#partenzaTable tbody");
-  tbody.innerHTML = "";
-  arr.forEach(item => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${item.idx}</td><td>${item.testo}</td><td>${item.prodotto}</td>`;
-    tr.onclick = () => selectPartenza(item.idx);
-    tbody.appendChild(tr);
-  });
-}
-
-// FUNZIONE per click sulla riga
-function selectPartenza(idx) {
-  console.log("Selezionato indice:", idx);
-
-  // scrive su Firebase
-  fetch(firebaseBase + "/partenza/select.json", {
-    method: "PUT",
-    body: JSON.stringify(idx)
-  });
-}
-
-// EVENTO input filtro
-document.querySelector("#filtro").addEventListener("input", e => {
-  filterByProdotto(e.target.value.trim());
-});
-
-// CARICA iniziale
-loadPartenza();
+// Aggiorna al cambio filtro
+inputFiltro.addEventListener("input", aggiornaLista);
 </script>
 
 </body>
