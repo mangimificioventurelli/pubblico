@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Lista Partenza</title>
+<style>
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #333; padding: 5px; text-align: left; }
+  tr.selected { background-color: #8f8; }
+</style>
+</head>
+<body>
+
+<label>Filtra per prodotto: </label>
+<input type="text" id="filtroProdotto" placeholder="Digita prodotto">
+
+<table id="tabellaPartenza">
+  <thead>
+    <tr><th>Indice</th><th>Testo</th><th>Prodotto</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+const firebaseBase = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/";
+const listaUrl = firebaseBase + "/partenza/lista.json";
+
+async function caricaLista() {
+    const r = await fetch(listaUrl);
+    const lista = await r.json();
+    const tbody = document.querySelector("#tabellaPartenza tbody");
+    tbody.innerHTML = "";
+
+    for (const item of lista) {
+        // parsing prodotto dalla riga di testo
+        const parti = item.testo.split(" ");
+        const prodotto = parti.slice(2).join(" ");
+        
+        const tr = document.createElement("tr");
+        tr.dataset.idx = item.idx;
+        tr.dataset.prodotto = prodotto;
+        tr.innerHTML = `<td>${item.idx}</td><td>${item.testo}</td><td>${prodotto}</td>`;
+        tbody.appendChild(tr);
+    }
+}
+
+function filtraLista() {
+    const filtro = document.getElementById("filtroProdotto").value.toUpperCase();
+    const rows = document.querySelectorAll("#tabellaPartenza tbody tr");
+
+    rows.forEach(row => {
+        const prod = row.dataset.prodotto.toUpperCase();
+        row.style.display = prod.includes(filtro) ? "" : "none";
+    });
+}
+
+function selezionaElemento(tr) {
+    document.querySelectorAll("#tabellaPartenza tbody tr").forEach(r => r.classList.remove("selected"));
+    tr.classList.add("selected");
+
+    const idx = tr.dataset.idx;
+    // invio indice selezionato a Firebase
+    fetch(firebaseBase + "/partenza/select.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(idx)
+    });
+}
+
+document.getElementById("filtroProdotto").addEventListener("input", filtraLista);
+document.querySelector("#tabellaPartenza tbody").addEventListener("click", e => {
+    let tr = e.target.closest("tr");
+    if (tr) selezionaElemento(tr);
+});
+
+caricaLista();
+</script>
+</body>
+</html>
