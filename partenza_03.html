@@ -22,6 +22,7 @@ tbody tr:hover { background-color: #f0f0f0; cursor: pointer; }
 <tr>
 <th>Indice</th>
 <th>Testo OCR</th>
+<th>Estrattore</th>
 <th>Prodotto Normalizzato</th>
 </tr>
 </thead>
@@ -30,44 +31,50 @@ tbody tr:hover { background-color: #f0f0f0; cursor: pointer; }
 </div>
 
 <script>
-// Mappa normalizzazione prodotti sporchi OCR
 const mapping = {
     "RANTURCI": "GRANTURCO",
     "GRANTURCI": "GRANTURCO",
     "MANGOOA": "GRANTURCO"
 };
 
-// Normalizza prodotto
-function normalizzaProdotto(prod) {
+function normalizzaProdotto(testo) {
+    // estrai tutto dopo il codice prodotto (es. MAN00002000000)
+    const match = testo.match(/[A-Z0-9]{6,}\s+(.*)$/);
+    let prod = match ? match[1] : testo;
+    
+    // applica correzioni OCR
     for (let k in mapping) {
         if (prod.includes(k)) prod = prod.replace(k, mapping[k]);
     }
-    return prod;
+    return prod.trim();
 }
 
-// Stato selezione
+function estraiEstrattore(testo) {
+    const parti = testo.split(" ");
+    return parti.length >= 2 ? parti[1] : "";
+}
+
 let selectedIdx = null;
 
-// Carica dati da Firebase
 async function caricaLista() {
     const listaResp = await fetch("https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/lista.json");
-    const lista = await listaResp.json();
+    const lista = await listaResp.json() || [];
     
     const prodResp = await fetch("https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/prodotto.json");
-    const prodottoDest = await prodResp.json();
-    
+    const prodottoDest = await prodResp.json() || "";
+
     const tbody = document.querySelector("#tabellaPartenza tbody");
     tbody.innerHTML = "";
 
     lista.forEach(item => {
-        let prodNorm = normalizzaProdotto(item.testo);
-        let selectedClass = prodNorm.includes(prodottoDest) ? "selected" : "";
-        
+        const estrattore = estraiEstrattore(item.testo);
+        const prodNorm = normalizzaProdotto(item.testo);
+        const selectedClass = prodNorm.includes(prodottoDest) ? "selected" : "";
+
         const tr = document.createElement("tr");
         tr.className = selectedClass;
-        tr.innerHTML = `<td>${item.idx}</td><td>${item.testo}</td><td>${prodNorm}</td>`;
-        
-        // click per selezione
+        tr.innerHTML = `<td>${item.idx}</td><td>${item.testo}</td><td>${estrattore}</td><td>${prodNorm}</td>`;
+
         tr.addEventListener("click", () => {
             if (selectedIdx !== null) {
                 tbody.querySelectorAll("tr")[selectedIdx].classList.remove("selected");
@@ -75,9 +82,8 @@ async function caricaLista() {
             tr.classList.add("selected");
             selectedIdx = item.idx;
             console.log("Selezionato indice:", selectedIdx, "Prodotto:", prodNorm);
-            // puoi aggiungere qui invio a Firebase se vuoi
         });
-        
+
         tbody.appendChild(tr);
     });
 }
