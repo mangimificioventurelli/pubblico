@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>DEBUG Partenza</title>
+<style>
+body { font-family: monospace; }
+pre { background:#eee; padding:10px; }
+</style>
+</head>
+<body>
+
+<h3>DEBUG Firebase</h3>
+
+<h4>dest/prodotto.json</h4>
+<pre id="dest"></pre>
+
+<h4>partenza/lista.json</h4>
+<pre id="lista"></pre>
+
+<script>
+const base = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+
+async function debug() {
+  const prod = await fetch(base + "/dest/prodotto.json").then(r => r.json());
+  const lista = await fetch(base + "/partenza/lista.json").then(r => r.json());
+
+  document.getElementById("dest").innerText =
+    JSON.stringify(prod, null, 2);
+
+  document.getElementById("lista").innerText =
+    JSON.stringify(lista, null, 2);
+}
+
+debug();
+</script>
+
+</body>
+</html>
