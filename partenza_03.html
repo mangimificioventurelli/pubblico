@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lista Partenza</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 10px; }
+h2 { text-align: center; }
+table { border-collapse: collapse; width: 100%; table-layout: fixed; word-wrap: break-word; }
+th, td { border: 1px solid #aaa; padding: 6px; text-align: left; }
+tr.selected { background-color: #d0f0d0; }
+tbody tr:hover { background-color: #f0f0f0; cursor: pointer; }
+.container { overflow-x: auto; }
+</style>
+</head>
+<body>
+<h2>Lista Partenza</h2>
+<div class="container">
+<table id="tabellaPartenza">
+<thead>
+<tr>
+<th>Indice</th>
+<th>Testo OCR</th>
+<th>Prodotto Normalizzato</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+
+<script>
+// Mappa normalizzazione prodotti sporchi OCR
+const mapping = {
+    "RANTURCI": "GRANTURCO",
+    "GRANTURCI": "GRANTURCO",
+    "MANGOOA": "GRANTURCO"
+};
+
+// Normalizza prodotto
+function normalizzaProdotto(prod) {
+    for (let k in mapping) {
+        if (prod.includes(k)) prod = prod.replace(k, mapping[k]);
+    }
+    return prod;
+}
+
+// Stato selezione
+let selectedIdx = null;
+
+// Carica dati da Firebase
+async function caricaLista() {
+    const listaResp = await fetch("https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/lista.json");
+    const lista = await listaResp.json();
+    
+    const prodResp = await fetch("https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/prodotto.json");
+    const prodottoDest = await prodResp.json();
+    
+    const tbody = document.querySelector("#tabellaPartenza tbody");
+    tbody.innerHTML = "";
+
+    lista.forEach(item => {
+        let prodNorm = normalizzaProdotto(item.testo);
+        let selectedClass = prodNorm.includes(prodottoDest) ? "selected" : "";
+        
+        const tr = document.createElement("tr");
+        tr.className = selectedClass;
+        tr.innerHTML = `<td>${item.idx}</td><td>${item.testo}</td><td>${prodNorm}</td>`;
+        
+        // click per selezione
+        tr.addEventListener("click", () => {
+            if (selectedIdx !== null) {
+                tbody.querySelectorAll("tr")[selectedIdx].classList.remove("selected");
+            }
+            tr.classList.add("selected");
+            selectedIdx = item.idx;
+            console.log("Selezionato indice:", selectedIdx, "Prodotto:", prodNorm);
+            // puoi aggiungere qui invio a Firebase se vuoi
+        });
+        
+        tbody.appendChild(tr);
+    });
+}
+
+caricaLista();
+</script>
+</body>
+</html>
