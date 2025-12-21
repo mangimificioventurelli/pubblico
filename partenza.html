@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<title>Selezione Estrattore</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f2f2f2;
+  margin: 0;
+  padding: 10px;
+}
+h2 {
+  text-align: center;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+th, td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+tr:hover {
+  background: #e6f0ff;
+  cursor: pointer;
+}
+th {
+  background: #333;
+  color: #fff;
+}
+</style>
+</head>
+
+<body>
+
+<h2 id="titolo">Caricamento...</h2>
+
+<table>
+<thead>
+<tr>
+  <th>#</th>
+  <th>Estrattore</th>
+  <th>Prodotto</th>
+</tr>
+</thead>
+<tbody id="lista"></tbody>
+</table>
+
+<script>
+const base = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+
+function norm(s) {
+  return s
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+}
+
+async function carica() {
+  const prodResp = await fetch(base + "/dest/prodotto.json");
+  const prodottoDest = await prodResp.json();
+
+  const listaResp = await fetch(base + "/partenza/lista.json");
+  const lista = await listaResp.json();
+
+  if (!prodottoDest || !lista) {
+    document.getElementById("titolo").innerText = "Dati non disponibili";
+    return;
+  }
+
+  const keyDest = norm(prodottoDest);
+
+  document.getElementById("titolo").innerText =
+    "Prodotto DEST: " + prodottoDest;
+
+  const tbody = document.getElementById("lista");
+  tbody.innerHTML = "";
+
+  lista.forEach(item => {
+    const testo = item.testo || "";
+    const parti = testo.split(" ");
+    const estrattore = parti[1] || "";
+    const prodotto = parti.slice(2).join(" ");
+    const keyProd = norm(prodotto);
+
+    if (keyProd === keyDest) {
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${item.idx}</td>
+        <td>${estrattore}</td>
+        <td>${prodotto}</td>
+      `;
+
+      tr.onclick = async () => {
+        await fetch(base + "/partenza/select.json", {
+          method: "PUT",
+          body: item.idx
+        });
+        alert("Selezionato estrattore " + estrattore);
+      };
+
+      tbody.appendChild(tr);
+    }
+  });
+}
+
+carica();
+</script>
+
+</body>
+</html>
