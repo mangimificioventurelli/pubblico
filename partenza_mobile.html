@@ -122,7 +122,14 @@ async function main() {
 
   lista.forEach(item => {
     const prod = estraiProdotto(item.testo);
-    if (prod !== key) return;
+
+    console.log({
+  testo: item.testo,
+  prodottoEstratto: prod,
+  keyDest: key
+});
+    
+   //if (!prod.includes(key)) return;
 
     const estr = estraiEstrattore(item.testo);
 
