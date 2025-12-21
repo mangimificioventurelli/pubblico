@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<title>Selezione Partenza</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #111;
+  color: #eee;
+  margin: 0;
+  padding: 10px;
+}
+
+h2 {
+  margin-top: 5px;
+  text-align: center;
+}
+
+#info {
+  background: #222;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th, td {
+  padding: 6px;
+  border-bottom: 1px solid #333;
+}
+
+th {
+  background: #222;
+  position: sticky;
+  top: 0;
+}
+
+tr {
+  cursor: pointer;
+}
+
+tr:hover {
+  background: #2a2a2a;
+}
+
+.bad {
+  opacity: 0.4;
+}
+
+button {
+  background: #3a7;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h2>PARTENZA</h2>
+
+<div id="info">
+  <div><b>Prodotto DEST:</b> <span id="destProd">—</span></div>
+</div>
+
+<table id="tbl">
+<thead>
+<tr>
+  <th>Idx</th>
+  <th>Estr.</th>
+  <th>Prodotto</th>
+  <th>OCR</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<script>
+/* ================= CONFIG ================= */
+
+const FIREBASE = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+
+/* ================= UTILS ================= */
+
+function norm(s) {
+  return s
+    .toUpperCase()
+    .replace(/0/g, "O")
+    .replace(/[^A-Z ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function estraiEstrattore(t) {
+  let m = t.match(/\bS\d{1,2}\b/);
+  if (m) return m[0];
+  m = t.match(/\$\d{1,2}/);
+  if (m) return m[0];
+  m = t.match(/\b\d{1,2}\b/);
+  if (m) return m[0];
+  return "";
+}
+
+function estraiProdotto(testo) {
+  const t = norm(testo);
+
+  const prodotti = [
+    "GRANTURCO SCHIACCI",
+    "GRANTURCO",
+    "ORZO",
+    "FARINA DI SOIA",
+    "FIOCCHI DI SOIA",
+    "FARINA DI GIRASOLE",
+    "CRUSCA DI FRUMENTO",
+    "POLPA DI BARBABIETOLE",
+    "GUSCI DI SEMI"
+  ];
+
+  for (const p of prodotti) {
+    if (t.includes(p)) return p;
+  }
+
+  return t;
+}
+
+/* ================= FIREBASE ================= */
+
+async function fbGet(path) {
+  const r = await fetch(FIREBASE + path + ".json");
+  return await r.json();
+}
+
+async function fbSet(path, val) {
+  await fetch(FIREBASE + path + ".json", {
+    method: "PUT",
+    body: JSON.stringify(val)
+  });
+}
+
+/* ================= MAIN ================= */
+
+async function main() {
+
+  const destProd = await fbGet("/dest/prodotto");
+  document.getElementById("destProd").textContent = destProd || "—";
+
+  const lista = await fbGet("/partenza/lista");
+  if (!Array.isArray(lista)) return;
+
+  const tbody = document.querySelector("#tbl tbody");
+  tbody.innerHTML = "";
+
+  lista.forEach(row => {
+    const testo = row.testo || "";
+    const prod = estraiProdotto(testo);
+    const estr = estraiEstrattore(testo);
+
+    const match =
+      destProd &&
+      prod &&
+      norm(prod).includes(norm(destProd));
+
+    const tr = document.createElement("tr");
+    if (!match) tr.classList.add("bad");
+
+    tr.innerHTML = `
+      <td>${row.idx}</td>
+      <td>${estr}</td>
+      <td>${prod}</td>
+      <td>${testo}</td>
+    `;
+
+    tr.onclick = async () => {
+      await fbSet("/partenza/select", row.idx);
+      alert("Indice selezionato: " + row.idx);
+    };
+
+    tbody.appendChild(tr);
+  });
+}
+
+main();
+</script>
+
+</body>
+</html>
