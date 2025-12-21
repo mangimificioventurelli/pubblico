@@ -1,113 +1,163 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8" />
-<title>Selezione Estrattore</title>
+<meta charset="UTF-8">
+<title>Selezione Partenza</title>
 
 <style>
 body {
   font-family: Arial, sans-serif;
-  background: #f2f2f2;
-  margin: 0;
-  padding: 10px;
+  background: #f4f4f4;
+  padding: 20px;
 }
+
 h2 {
-  text-align: center;
+  margin-bottom: 10px;
 }
+
 table {
-  width: 100%;
   border-collapse: collapse;
-  background: #fff;
+  width: 100%;
+  background: white;
 }
+
 th, td {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
+  border: 1px solid #ccc;
+  padding: 6px 8px;
+  font-size: 14px;
 }
+
+th {
+  background: #eee;
+}
+
 tr:hover {
-  background: #e6f0ff;
+  background: #dff0ff;
   cursor: pointer;
 }
-th {
-  background: #333;
-  color: #fff;
+
+.info {
+  margin-bottom: 10px;
+  font-weight: bold;
 }
 </style>
 </head>
 
 <body>
 
-<h2 id="titolo">Caricamento...</h2>
+<h2>Lista Partenze filtrata</h2>
+<div class="info" id="info">Caricamento...</div>
 
 <table>
 <thead>
 <tr>
-  <th>#</th>
+  <th>Idx</th>
   <th>Estrattore</th>
   <th>Prodotto</th>
+  <th>Testo OCR</th>
 </tr>
 </thead>
-<tbody id="lista"></tbody>
+<tbody id="tbody"></tbody>
 </table>
 
 <script>
-const base = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+const FIREBASE_BASE = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
 
-function norm(s) {
-  return s
+/* ===================== UTIL ===================== */
+
+function normalize(txt) {
+  return txt
     .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "");
+    .replace(/[^A-Z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
-async function carica() {
-  const prodResp = await fetch(base + "/dest/prodotto.json");
-  const prodottoDest = await prodResp.json();
+function estraiEstrattore(testo) {
+  const m = normalize(testo).match(/\b(\d{1,3})\b/);
+  return m ? m[1] : "";
+}
 
-  const listaResp = await fetch(base + "/partenza/lista.json");
-  const lista = await listaResp.json();
+function estraiProdotto(testo) {
+  const parti = normalize(testo).split(" ");
 
-  if (!prodottoDest || !lista) {
-    document.getElementById("titolo").innerText = "Dati non disponibili";
-    return;
-  }
-
-  const keyDest = norm(prodottoDest);
-
-  document.getElementById("titolo").innerText =
-    "Prodotto DEST: " + prodottoDest;
-
-  const tbody = document.getElementById("lista");
-  tbody.innerHTML = "";
-
-  lista.forEach(item => {
-    const testo = item.testo || "";
-    const parti = testo.split(" ");
-    const estrattore = parti[1] || "";
-    const prodotto = parti.slice(2).join(" ");
-    const keyProd = norm(prodotto);
-
-    if (keyProd === keyDest) {
-      const tr = document.createElement("tr");
-
-      tr.innerHTML = `
-        <td>${item.idx}</td>
-        <td>${estrattore}</td>
-        <td>${prodotto}</td>
-      `;
-
-      tr.onclick = async () => {
-        await fetch(base + "/partenza/select.json", {
-          method: "PUT",
-          body: item.idx
-        });
-        alert("Selezionato estrattore " + estrattore);
-      };
-
-      tbody.appendChild(tr);
+  let start = -1;
+  for (let i = 0; i < parti.length; i++) {
+    if (/^[A-Z]{4,}$/.test(parti[i])) {
+      start = i;
+      break;
     }
+  }
+  if (start === -1) return "";
+
+  return parti.slice(start).join(" ");
+}
+
+/* ===================== FIREBASE ===================== */
+
+async function fbGet(path) {
+  const r = await fetch(FIREBASE_BASE + path);
+  return r.json();
+}
+
+async function fbPut(path, value) {
+  await fetch(FIREBASE_BASE + path, {
+    method: "PUT",
+    body: JSON.stringify(value)
   });
 }
 
-carica();
+/* ===================== MAIN ===================== */
+
+async function main() {
+  const info = document.getElementById("info");
+  const tbody = document.getElementById("tbody");
+
+  const prodottoDest = (await fbGet("/dest/prodotto.json")) || "";
+  const lista = (await fbGet("/partenza/lista.json")) || [];
+
+  if (!prodottoDest) {
+    info.textContent = "Prodotto DEST non trovato";
+    return;
+  }
+
+  info.textContent = "Prodotto selezionato: " + prodottoDest;
+
+  const keyDest = normalize(prodottoDest);
+
+  const filtrata = lista.filter(item => {
+    const prod = estraiProdotto(item.testo);
+    return prod === keyDest;
+  });
+
+  if (filtrata.length === 0) {
+    info.textContent += " (nessuna partenza trovata)";
+    return;
+  }
+
+  filtrata.forEach(item => {
+    const tr = document.createElement("tr");
+
+    const estr = estraiEstrattore(item.testo);
+    const prod = estraiProdotto(item.testo);
+
+    tr.innerHTML = `
+      <td>${item.idx}</td>
+      <td>${estr}</td>
+      <td>${prod}</td>
+      <td>${item.testo}</td>
+    `;
+
+    tr.onclick = async () => {
+      await fbPut("/partenza/select.json", item.idx);
+      alert("Indice selezionato: " + item.idx);
+    };
+
+    tbody.appendChild(tr);
+  });
+}
+
+main();
 </script>
 
 </body>
