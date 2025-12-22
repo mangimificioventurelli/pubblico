@@ -3,77 +3,116 @@
 <head>
 <meta charset="UTF-8">
 <title>Lista Partenza</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
+  body { font-family: sans-serif; margin: 10px; }
+  input { width: 100%; padding: 8px; font-size: 16px; margin-bottom: 10px; }
+
   table { border-collapse: collapse; width: 100%; }
-  th, td { border: 1px solid #333; padding: 5px; text-align: left; }
+  th, td { border: 1px solid #333; padding: 6px; }
   tr.selected { background-color: #8f8; }
 </style>
 </head>
+
 <body>
 
-<label>Filtra per prodotto: </label>
-<input type="text" id="filtroProdotto" placeholder="Digita prodotto">
+<h3>Selezione Partenza</h3>
+
+<label>Prodotto (DEST):</label>
+<input type="text" id="filtroProdotto" readonly>
 
 <table id="tabellaPartenza">
   <thead>
-    <tr><th>Indice</th><th>Testo</th><th>Prodotto</th></tr>
+    <tr>
+      <th>Indice</th>
+      <th>Testo</th>
+      <th>Prodotto</th>
+    </tr>
   </thead>
   <tbody></tbody>
 </table>
 
 <script>
-const firebaseBase = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/";
-const listaUrl = firebaseBase + "/partenza/lista.json";
+const firebaseBase =
+  "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
 
+const listaUrl   = firebaseBase + "/partenza/lista.json";
+const prodottoUrl = firebaseBase + "/dest/prodotto.json";
+const selectUrl  = firebaseBase + "/partenza/select.json";
+
+let filtroProdotto = "";
+
+// --- normalizzazione base lato HTML ---
+function normalizza(t) {
+  return t
+    .toUpperCase()
+    .replace(/[^A-Z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// --- carica prodotto DEST ---
+async function caricaProdottoDest() {
+  const r = await fetch(prodottoUrl);
+  const prod = await r.json();
+  filtroProdotto = normalizza(prod || "");
+  document.getElementById("filtroProdotto").value = filtroProdotto;
+}
+
+// --- carica lista e FILTRA SUBITO ---
 async function caricaLista() {
-    const r = await fetch(listaUrl);
-    const lista = await r.json();
-    const tbody = document.querySelector("#tabellaPartenza tbody");
-    tbody.innerHTML = "";
+  const r = await fetch(listaUrl);
+  const lista = await r.json();
 
-    for (const item of lista) {
-        // parsing prodotto dalla riga di testo
-        const parti = item.testo.split(" ");
-        const prodotto = parti.slice(2).join(" ");
-        
-        const tr = document.createElement("tr");
-        tr.dataset.idx = item.idx;
-        tr.dataset.prodotto = prodotto;
-        tr.innerHTML = `<td>${item.idx}</td><td>${item.testo}</td><td>${prodotto}</td>`;
-        tbody.appendChild(tr);
-    }
+  const tbody = document.querySelector("#tabellaPartenza tbody");
+  tbody.innerHTML = "";
+
+  for (const item of lista) {
+    if (!item.testo) continue;
+
+    const parti = item.testo.split(" ");
+    if (parti.length < 3) continue;
+
+    const prodotto = normalizza(parti.slice(2).join(" "));
+
+    // 🔴 FILTRO QUI
+    if (!prodotto.includes(filtroProdotto)) continue;
+
+    const tr = document.createElement("tr");
+    tr.dataset.idx = item.idx;
+
+    tr.innerHTML = `
+      <td>${item.idx}</td>
+      <td>${item.testo}</td>
+      <td>${prodotto}</td>
+    `;
+
+    tr.onclick = () => selezionaElemento(tr);
+    tbody.appendChild(tr);
+  }
 }
 
-function filtraLista() {
-    const filtro = document.getElementById("filtroProdotto").value.toUpperCase();
-    const rows = document.querySelectorAll("#tabellaPartenza tbody tr");
-
-    rows.forEach(row => {
-        const prod = row.dataset.prodotto.toUpperCase();
-        row.style.display = prod.includes(filtro) ? "" : "none";
-    });
-}
-
+// --- selezione ---
 function selezionaElemento(tr) {
-    document.querySelectorAll("#tabellaPartenza tbody tr").forEach(r => r.classList.remove("selected"));
-    tr.classList.add("selected");
+  document.querySelectorAll("tr").forEach(r => r.classList.remove("selected"));
+  tr.classList.add("selected");
 
-    const idx = tr.dataset.idx;
-    // invio indice selezionato a Firebase
-    fetch(firebaseBase + "/partenza/select.json", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(idx)
-    });
+  const idx = Number(tr.dataset.idx);
+
+  fetch(selectUrl, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(idx)
+  });
 }
 
-document.getElementById("filtroProdotto").addEventListener("input", filtraLista);
-document.querySelector("#tabellaPartenza tbody").addEventListener("click", e => {
-    let tr = e.target.closest("tr");
-    if (tr) selezionaElemento(tr);
-});
-
-caricaLista();
+// --- bootstrap ---
+(async () => {
+  await caricaProdottoDest();
+  await caricaLista();
+})();
 </script>
+
 </body>
 </html>
