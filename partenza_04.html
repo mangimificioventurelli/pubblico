@@ -83,9 +83,10 @@ const FIREBASE =
 /* ================= UTILS ================= */
 
 function norm(s) {
-  return (s || "")
+  return s
     .toUpperCase()
     .replace(/0/g, "O")
+    .replace(/1/g, "I")
     .replace(/[^A-Z ]/g, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -105,7 +106,7 @@ function estraiProdotto(testo) {
   const t = norm(testo);
 
   const prodotti = [
-    "GRANTURCO SCHIACCI",
+    "GRANTURCO SCHIACCIATO SF",
     "GRANTURCO",
     "ORZO",
     "FARINA DI SOIA",
