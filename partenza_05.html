@@ -147,77 +147,63 @@ async function fbSet(path, val) {
 async function main() {
 
   const destProdRaw = await fbGet("/dest/prodotto");
-  const destProd = norm(destProdRaw);
-
+  const destProd = norm(destProdRaw || "");
   document.getElementById("destProd").textContent = destProd || "—";
 
-  const lista = await fbGet("/partenza/lista");
-  if (!Array.isArray(lista)) return;
+  const data = await fbGet("/partenza/lista");
+  if (!data || typeof data !== "object") return;
 
   const tbody = document.querySelector("#tbl tbody");
   tbody.innerHTML = "";
 
-  lista.forEach(row => {
-    const testo = row.testo || "";
+  for (const key in data) {
+    const row = data[key];
+
+    // ✅ FILTRO UNIVERSALE (non esplode mai)
+    if (!row || typeof row !== "object") continue;
+    if (!row.testo) continue;
+
+    const testo = row.testo;
     const prodotto = estraiProdotto(testo);
     const estr = estraiEstrattore(testo);
 
-    // 🔴 FILTRO DURO
-    if (!prodotto || !prodotto.includes(destProd)) return;
+    if (!prodotto) continue;
+    if (destProd && !prodotto.includes(destProd)) continue;
 
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td>${row.idx}</td>
+      <td>${key}</td>
       <td>${estr}</td>
       <td>${prodotto}</td>
       <td>${testo}</td>
     `;
 
-   
-tr.dataset.idx = String(row.idx);   // FORZIAMO STRINGA
+    // ✅ DATI PULITI E COERENTI
+    tr.dataset.idx = String(key);
+    tr.dataset.part = prodotto;
+    tr.dataset.dest = destProd;
 
-tr.onclick = async function () {
+    // ✅ UNA SOLA ONCLICK
+    tr.onclick = async function () {
 
-  // evidenzia sempre la riga
-  document.querySelectorAll("tr").forEach(r =>
-    r.classList.remove("selected")
-  );
-  this.classList.add("selected");
+      document.querySelectorAll("#tbl tr")
+        .forEach(r => r.classList.remove("selected"));
+      this.classList.add("selected");
 
-  const idx = this.dataset.idx;
+      const payload = {
+        idx: this.dataset.idx,
+        part: this.dataset.part,
+        dest: this.dataset.dest,
+        ts: Date.now()
+      };
 
-  console.log("CLICK IDX =", idx);
-
-
-
-tr.dataset.idx = row.idx;
-tr.dataset.part = row.prodotto_partenza;
-tr.dataset.dest = row.prodotto_destinazione;
-
-tr.onclick = async function () {
-
-  document.querySelectorAll("tr").forEach(r =>
-    r.classList.remove("selected")
-  );
-  this.classList.add("selected");
-
-  const payload = {
-    idx: this.dataset.idx,
-    part: this.dataset.part,
-    dest: this.dataset.dest,
-    ts: Date.now()
-  };
-
-  console.log("SCRIVO FIREBASE:", payload);
-
-  await fbSet("/partenza/select", payload);
-};
-
-
+      console.log("SCRIVO FIREBASE:", payload);
+      await fbSet("/partenza/select", payload);
+    };
 
     tbody.appendChild(tr);
-  });
+  }
 }
 
 main();
