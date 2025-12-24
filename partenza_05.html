@@ -189,13 +189,16 @@ tr.onclick = async function () {
 
   console.log("CLICK IDX =", idx);
 
-  // scriviamo OGNI VOLTA qualcosa di diverso
-  await fbSet("/partenza/select", {
-    idx: idx,
-    ts: Date.now()
-  });
 
-};
+
+await fbSet("/partenza/select/idx", Number(this.dataset.idx));
+
+await fbSet("/partenza/select/check", {
+  part: this.dataset.part,
+  dest: this.dataset.dest,
+  ts: Date.now()
+});
+    
     
     
  //   tr.onclick = async () => {
