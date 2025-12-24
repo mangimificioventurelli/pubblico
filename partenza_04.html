@@ -170,10 +170,20 @@ async function main() {
       <td>${testo}</td>
     `;
 
-    tr.onclick = async () => {
-      await fbSet("/partenza/select", row.idx);
-      alert("Indice selezionato: " + row.idx);
-    };
+   
+    tr.dataset.idx = row.idx;
+
+tr.onclick = async function () {
+  const idx = this.dataset.idx;
+  await fbSet("/partenza/select", idx);
+  alert("Indice selezionato: " + idx);
+};
+    
+    
+ //   tr.onclick = async () => {
+ //     await fbSet("/partenza/select", row.idx);
+ //     alert("Indice selezionato: " + row.idx);
+ //   };
 
 //    tr.onclick = async () => {
 //  await fbSet("/partenza/select", {
