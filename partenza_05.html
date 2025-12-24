@@ -191,28 +191,30 @@ tr.onclick = async function () {
 
 
 
-await fbSet("/partenza/select/idx", Number(this.dataset.idx));
+tr.dataset.idx = row.idx;
+tr.dataset.part = row.prodotto_partenza;
+tr.dataset.dest = row.prodotto_destinazione;
 
-await fbSet("/partenza/select/check", {
-  part: this.dataset.part,
-  dest: this.dataset.dest,
-  ts: Date.now()
-});
-    
-    
-    
- //   tr.onclick = async () => {
- //     await fbSet("/partenza/select", row.idx);
- //     alert("Indice selezionato: " + row.idx);
- //   };
+tr.onclick = async function () {
 
-//    tr.onclick = async () => {
-//  await fbSet("/partenza/select", {
- //   idx: row.idx,
-//    prodotto: prod
-//  });
-//  alert("Selezionato: " + prod);
-//};
+  document.querySelectorAll("tr").forEach(r =>
+    r.classList.remove("selected")
+  );
+  this.classList.add("selected");
+
+  const payload = {
+    idx: this.dataset.idx,
+    part: this.dataset.part,
+    dest: this.dataset.dest,
+    ts: Date.now()
+  };
+
+  console.log("SCRIVO FIREBASE:", payload);
+
+  await fbSet("/partenza/select", payload);
+};
+
+
 
     tbody.appendChild(tr);
   });
