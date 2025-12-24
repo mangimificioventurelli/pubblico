@@ -48,6 +48,10 @@ tr {
   cursor: pointer;
 }
 
+tr.selected {
+  background: #ffd966;
+}  
+
 tr:hover {
   background: #2a2a2a;
 }
@@ -171,12 +175,26 @@ async function main() {
     `;
 
    
-    tr.dataset.idx = row.idx;
+tr.dataset.idx = String(row.idx);   // FORZIAMO STRINGA
 
 tr.onclick = async function () {
+
+  // evidenzia sempre la riga
+  document.querySelectorAll("tr").forEach(r =>
+    r.classList.remove("selected")
+  );
+  this.classList.add("selected");
+
   const idx = this.dataset.idx;
-  await fbSet("/partenza/select", idx);
-  alert("Indice selezionato: " + idx);
+
+  console.log("CLICK IDX =", idx);
+
+  // scriviamo OGNI VOLTA qualcosa di diverso
+  await fbSet("/partenza/select", {
+    idx: idx,
+    ts: Date.now()
+  });
+
 };
     
     
