@@ -179,6 +179,7 @@ async function main() {
       <td>${testo}</td>
     `;
 
+
     // ✅ DATI PULITI E COERENTI
     tr.dataset.idx = String(key);
     tr.dataset.part = prodotto;
@@ -192,11 +193,15 @@ async function main() {
       this.classList.add("selected");
 
       const payload = {
-        idx: this.dataset.idx,
+        idx: Number(this.dataset.idx),
         part: this.dataset.part,
         dest: this.dataset.dest,
         ts: Date.now()
       };
+
+       // DEBUG CONSIGLIATISSIMO
+  console.log(typeof payload.idx, payload.idx);
+  console.log(typeof payload.ts, payload.ts);
 
       console.log("SCRIVO FIREBASE:", payload);
       await fbSet("/partenza/select", payload);
