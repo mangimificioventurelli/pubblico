@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<title>Checklist Partenza</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<style>
+body {
+  background: #111;
+  color: #eee;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 10px;
+}
+
+h2 { text-align: center; }
+
+#info {
+  background: #222;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th, td {
+  padding: 6px;
+  border-bottom: 1px solid #333;
+}
+
+tr { cursor: pointer; }
+tr.selected { background: #ffd966; }
+</style>
+</head>
+
+<body>
+
+<h2>CHECKLIST PARTENZA</h2>
+
+<div id="info">
+  <b>Prodotto DEST:</b> <span id="destProd">—</span>
+</div>
+
+<table>
+<thead>
+<tr>
+  <th>Idx</th>
+  <th>Estr.</th>
+  <th>Prodotto</th>
+  <th>OCR</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+
+<script>
+const FB =
+  "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+
+function norm(s) {
+  return (s || "")
+    .toUpperCase()
+    .replace(/0/g,"O")
+    .replace(/1/g,"I")
+    .replace(/[^A-Z ]/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+async function fbGet(p) {
+  const r = await fetch(FB + p + ".json");
+  return await r.json();
+}
+
+async function fbSet(p, v) {
+  await fetch(FB + p + ".json", {
+    method: "PUT",
+    body: JSON.stringify(v)
+  });
+}
+
+async function main() {
+
+  const dest = norm(await fbGet("/dest/prodotto"));
+  document.getElementById("destProd").innerText = dest || "—";
+
+  const lista = await fbGet("/partenza/lista");
+  if (!lista) return;
+
+  const tb = document.getElementById("tbody");
+
+  for (const idx in lista) {
+    const r = lista[idx];
+    if (!r || !r.testo) continue;
+
+    const prod = norm(r.testo);
+    if (dest && !prod.includes(dest)) continue;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${idx}</td>
+      <td>—</td>
+      <td>${dest}</td>
+      <td>${r.testo}</td>
+    `;
+
+    tr.onclick = async () => {
+      await fbSet("/partenza/select", {
+        idx: Number(idx),
+        part: dest,
+        dest: dest,
+        ts: Date.now()
+      });
+
+      window.location.href = "index_def.html";
+    };
+
+    tb.appendChild(tr);
+  }
+}
+
+main();
+</script>
+
+</body>
+</html>
