@@ -70,7 +70,7 @@
 
 <div class="app">
   <div id="peso">123.45</div>
-  <div id="stato">STATO: automatico</div>
+  <div id="stato">automatico</div>
   <div class="buttons">
     <button class="btn-start" onclick="alert('START premuto')">START</button>
     <button class="btn-stop" onclick="alert('STOP premuto')">STOP</button>
@@ -90,11 +90,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function aggiornaUI(stato) {
     if (!stato) return;
 
-    // rimuovo prefisso "STATO: " se presente
-    if (stato.toUpperCase().startsWith("STATO:")) {
-      stato = stato.substring(7).trim();
-    }
-
     stato = stato.toLowerCase();
 
     const operativo = ["marcia","automatico","svuotamento"].includes(stato);
@@ -105,13 +100,13 @@ document.addEventListener("DOMContentLoaded", () => {
     btnCheck.style.display = (stato === "automatico") ? "block" : "none";
   }
 
-  // test manuale: cambia stato ogni 3 secondi
+  // test automatico: cambia stato ogni 3 secondi
   let stati = ["marcia","automatico","svuotamento","manutenzione"];
   let i = 0;
   setInterval(() => {
     const s = stati[i % stati.length];
-    document.getElementById("stato").innerText = "STATO: " + s;
-    aggiornaUI(document.getElementById("stato").innerText);
+    document.getElementById("stato").innerText = s;
+    aggiornaUI(s);
     i++;
   }, 3000);
 
