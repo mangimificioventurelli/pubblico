@@ -193,6 +193,13 @@ async function aggiornaSelezione() {
 }
 setInterval(aggiornaSelezione, 1000); // aggiorna ogni secondo
 
+
+  const btnCheck = document.querySelector(".btn-check");
+
+btnCheck.onclick = () => {
+  sendCmd("checklist");
+};
+
   
 </script>
 
