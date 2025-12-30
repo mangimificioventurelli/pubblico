@@ -87,6 +87,10 @@ const PESO_URL  = BASE + "/peso.json";
 const STATO_URL = BASE + "/stato.json";
 const CMD_URL   = BASE + "/cmd.json";
 
+const btnStart = document.querySelector(".btn-start");
+const btnStop  = document.querySelector(".btn-stop");
+const btnReset = document.querySelector(".btn-reset");  
+
 const btnStart = document.getElementById("btnStart");
 const btnStop  = document.getElementById("btnStop");
 const btnCheck = document.getElementById("btnCheck");
@@ -103,13 +107,18 @@ let lastValidState = null;
 
 setInterval(async () => {
   try {
-    const r = await fetch(STATO_URL);
+    const r = await fetch(statoUrl);
     const stato = await r.json();
 
-    // ❌ ignora valori non validi
-    if (typeof stato !== "string" || stato.trim() === "") {
-      return;
-    }
+    if (!stato) return;
+
+    document.getElementById("stato").innerText =
+      "STATO: " + stato;
+
+    aggiornaUI(stato);   // ← QUESTO MANCAVA
+
+  } catch (e) {}
+}, 1000);
 
     // ✅ memorizza ultimo stato valido
     lastValidState = stato;
@@ -136,19 +145,23 @@ setInterval(async () => {
 
 
 /* ===== AGGIORNA UI ===== */  
-function aggiornaUI(mode) {
+function aggiornaUI(stato) {
 
-  const operativo = [
-    "marcia",
-    "automatico",
-    "svuotamento"
-  ].includes(mode);
+  if (!stato || typeof stato !== "string") return;
+
+  stato = stato.toLowerCase();
+
+  // sempre visibili in questi stati
+  const operativo =
+    stato === "marcia" ||
+    stato === "automatico" ||
+    stato === "svuotamento";
 
   btnStart.style.display = operativo ? "block" : "none";
   btnStop.style.display  = operativo ? "block" : "none";
 
-  btnCheck.style.display =
-    (mode === "automatico") ? "block" : "none";
+  // reset sempre visibile
+  btnReset.style.display = "block";
 }
 
   
