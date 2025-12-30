@@ -68,6 +68,8 @@ button.hidden { visibility: hidden; }
 </style>
 </head>
 
+  
+
 <body>
 
 <div class="app">
@@ -79,6 +81,11 @@ button.hidden { visibility: hidden; }
     <button class="btn-stop"  onclick="stopCmd()">STOP</button>
     <button class="btn-reset" onclick="sendCmd('reset')">RESET ALLARMI</button>
     <button class="btn-check hidden">CHECKLIST</button>
+
+  <div id="selezione" style="margin-top:20px; font-size:18px;">
+  Nessuna selezione
+</div>
+    
   </div>
 </div>
 
@@ -167,6 +174,24 @@ document.addEventListener("DOMContentLoaded", () => {
   // inizializza UI subito
   leggiStato();
 });
+
+
+  // selezione da checklist
+async function aggiornaSelezione() {
+  try {
+    const r = await fetch(BASE + "/partenza/select.json");
+    const sel = await r.json();
+    const div = document.getElementById("selezione");
+    if(sel && sel.part){
+      div.innerText = `Selezionato: ${sel.part} (Idx: ${sel.idx}, Estr: ${sel.dest})`;
+    } else {
+      div.innerText = "Nessuna selezione";
+    }
+  } catch(e){}
+}
+setInterval(aggiornaSelezione, 1000); // aggiorna ogni secondo
+
+  
 </script>
 
 </body>
