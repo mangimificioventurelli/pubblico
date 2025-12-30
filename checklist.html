@@ -149,20 +149,29 @@ async function main(){
     tr.dataset.dest = destProd;
 
     tr.onclick = async function(){
-      document.querySelectorAll("#tbl tr").forEach(r=>r.classList.remove("selected"));
-      this.classList.add("selected");
+  // Rimuove evidenziazione dalle altre righe
+  document.querySelectorAll("#tbl tr").forEach(r => r.classList.remove("selected"));
+  
+  // Evidenzia la riga cliccata
+  this.classList.add("selected");
 
-      const payload = {
-        idx: this.dataset.idx,
-        part: this.dataset.part,
-        dest: this.dataset.dest,
-        ts: Date.now()
-      };
+  // Prepara il payload per Firebase
+  const payload = {
+    idx: this.dataset.idx,
+    part: this.dataset.part,
+    dest: this.dataset.dest,
+    ts: Date.now()
+  };
 
-      console.log("SCRIVO FIREBASE:", payload);
-      await fbSet("/partenza/select", payload);
-      alert(`Selezionato: ${payload.part}`);
-    };
+  console.log("SCRIVO FIREBASE:", payload);
+  await fbSet("/partenza/select", payload);
+
+  // Mostra messaggio di conferma
+  const conferma = confirm(`Hai selezionato:\nPRODOTTO: ${payload.part}\nVuoi tornare alla schermata principale?`);
+  if(conferma){
+    window.location.href = "index.html";
+  }
+};
 
     tbody.appendChild(tr);
   }
