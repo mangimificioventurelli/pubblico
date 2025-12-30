@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bilancia</title>
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #111;
+  color: #fff;
+  font-family: system-ui, sans-serif;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  gap: 28px;
+}
+
+#peso {
+  font-size: 72px;
+  font-weight: bold;
+}
+
+#stato {
+  font-size: 32px;
+  padding: 10px 24px;
+  border-radius: 12px;
+  background: #222;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 80%;
+  max-width: 360px;
+}
+
+button {
+  height: 72px;
+  font-size: 24px;
+  font-weight: bold;
+  border-radius: 18px;
+  border: none;
+  color: white;
+}
+
+.btn-start { background: #00a84f; }
+.btn-stop  { background: #d72626; }
+.btn-check { background: #1e88e5; }
+
+button:active {
+  transform: scale(0.97);
+  opacity: 0.85;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div id="peso">---</div>
+  <div id="stato">STATO: ---</div>
+
+  <div class="buttons">
+    <button id="btnStart" class="btn-start" onclick="sendCmd('start')">START</button>
+    <button id="btnStop"  class="btn-stop"  onclick="sendCmd('stop')">STOP</button>
+    <button id="btnCheck" class="btn-check" onclick="openChecklist()">CHECKLIST</button>
+  </div>
+
+</div>
+
+<script>
+const BASE =
+  "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+
+const PESO_URL  = BASE + "/peso.json";
+const STATO_URL = BASE + "/stato.json";
+const CMD_URL   = BASE + "/cmd.json";
+
+const btnStart = document.getElementById("btnStart");
+const btnStop  = document.getElementById("btnStop");
+const btnCheck = document.getElementById("btnCheck");
+
+/* ===== PESO ===== */
+setInterval(async () => {
+  const r = await fetch(PESO_URL);
+  const p = await r.json();
+  if (p !== null) document.getElementById("peso").innerText = p;
+}, 500);
+
+/* ===== STATO + UI ===== */
+setInterval(async () => {
+  const r = await fetch(STATO_URL);
+  const mode = await r.json();
+  if (!mode) return;
+
+  document.getElementById("stato").innerText = "STATO: " + mode;
+  aggiornaUI(mode);
+}, 800);
+
+function aggiornaUI(mode) {
+
+  const operativo =
+    mode === "marcia" ||
+    mode === "automatico" ||
+    mode === "svuotamento";
+
+  btnStart.style.display = operativo ? "block" : "none";
+  btnStop.style.display  = operativo ? "block" : "none";
+  btnCheck.style.display = (mode === "automatico") ? "block" : "none";
+}
+
+/* ===== COMANDI ===== */
+async function sendCmd(cmd) {
+  await fetch(CMD_URL, {
+    method: "PUT",
+    body: JSON.stringify(cmd)
+  });
+}
+
+/* ===== CHECKLIST ===== */
+function openChecklist() {
+  window.location.href = "checklist.html";
+}
+</script>
+
+</body>
+</html>
