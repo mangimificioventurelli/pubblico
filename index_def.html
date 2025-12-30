@@ -87,8 +87,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnCheck = document.querySelector(".btn-check");
 
   // funzione per mostrare/nascondere bottoni in base allo stato
-  function aggiornaUI(stato) {
+function aggiornaUI(stato) {
     if (!stato) return;
+    // rimuovo prefisso "STATO: " se presente
+    if (stato.toUpperCase().startsWith("STATO:")) {
+        stato = stato.substring(7).trim();
+    }
     stato = stato.toLowerCase();
 
     const operativo = ["marcia","automatico","svuotamento"].includes(stato);
@@ -97,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btnStop.style.display  = operativo ? "block" : "none";
     btnReset.style.display = "block";
     btnCheck.style.display = (stato === "automatico") ? "block" : "none";
-  }
+}
 
   // test manuale: cambia stato ogni 3 secondi
   let stati = ["marcia","automatico","svuotamento"]()
