@@ -1,157 +1,34 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bilancia</title>
-
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  background: #111;
-  color: #fff;
-  font-family: system-ui, sans-serif;
-}
-
-.app {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  gap: 28px;
-}
-
-#peso {
-  font-size: 72px;
-  font-weight: bold;
-}
-
-#stato {
-  font-size: 32px;
-  padding: 10px 24px;
-  border-radius: 12px;
-  background: #222;
-}
-
-.buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  width: 80%;
-  max-width: 360px;
-}
-
-button {
-  height: 72px;
-  font-size: 24px;
-  font-weight: bold;
-  border-radius: 18px;
-  border: none;
-  color: white;
-}
-
-.btn-start { background: #00a84f; }
-.btn-stop  { background: #d72626; }
-.btn-check { background: #1e88e5; }
-
-button:active {
-  transform: scale(0.97);
-  opacity: 0.85;
-}
-</style>
-</head>
-
-<body>
-
-<div class="app">
-
-  <div id="peso">---</div>
-  <div id="stato">STATO: ---</div>
-
-  <div class="buttons">
-    <button id="btnStart" class="btn-start" onclick="sendCmd('start')">START</button>
-    <button id="btnStop"  class="btn-stop"  onclick="sendCmd('stop')">STOP</button>
-    <button id="btnCheck" class="btn-check" onclick="openChecklist()">CHECKLIST</button>
-  </div>
-
-</div>
-
 <script>
-const BASE =
-  "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+const BASE = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
 
 const PESO_URL  = BASE + "/peso.json";
-const STATO_URL = BASE + "/stato.json";
 const CMD_URL   = BASE + "/cmd.json";
+const STATO_URL = BASE + "/stato.json";
 
 const btnStart = document.querySelector(".btn-start");
 const btnStop  = document.querySelector(".btn-stop");
-const btnReset = document.querySelector(".btn-reset");  
+const btnReset = document.querySelector(".btn-reset");
 
-const btnStart = document.getElementById("btnStart");
-const btnStop  = document.getElementById("btnStop");
-const btnCheck = document.getElementById("btnCheck");
+let lock = false;
 
 /* ===== PESO ===== */
-setInterval(async () => {
-  const r = await fetch(PESO_URL);
-  const p = await r.json();
-  if (p !== null) document.getElementById("peso").innerText = p;
-}, 500);
-
-/* ===== STATO ===== */
-let lastValidState = null;
-
-setInterval(async () => {
+async function aggiornaPeso() {
   try {
-    const r = await fetch(statoUrl);
-    const stato = await r.json();
-
-    if (!stato) return;
-
-    document.getElementById("stato").innerText =
-      "STATO: " + stato;
-
-    aggiornaUI(stato);   // ← QUESTO MANCAVA
-
+    const r = await fetch(PESO_URL);
+    const peso = await r.json();
+    if (peso !== null && peso !== "") {
+      document.getElementById("peso").innerText = peso;
+    }
   } catch (e) {}
-}, 1000);
+}
+setInterval(aggiornaPeso, 500);
 
-    // ✅ memorizza ultimo stato valido
-    lastValidState = stato;
-
-    document.getElementById("stato").innerText =
-      "STATO: " + stato;
-
-    aggiornaUI(stato);
-
-  } catch (e) {
-    // errore di rete → NON toccare UI
-  }
-}, 800);
-
-  
-/setInterval(async () => {
-/  const r = await fetch(STATO_URL);
-/  const mode = await r.json();
-/  if (!mode) return;
-
-/  document.getElementById("stato").innerText = "STATO: " + mode;
-/  aggiornaUI(mode);
-/}, 800);
-
-
-/* ===== AGGIORNA UI ===== */  
+/* ===== UI ===== */
 function aggiornaUI(stato) {
-
-  if (!stato || typeof stato !== "string") return;
+  if (!stato) return;
 
   stato = stato.toLowerCase();
 
-  // sempre visibili in questi stati
   const operativo =
     stato === "marcia" ||
     stato === "automatico" ||
@@ -159,39 +36,53 @@ function aggiornaUI(stato) {
 
   btnStart.style.display = operativo ? "block" : "none";
   btnStop.style.display  = operativo ? "block" : "none";
-
-  // reset sempre visibile
   btnReset.style.display = "block";
 }
 
-  
-  
-  /function aggiornaUI(mode) {
+/* ===== STATO ===== */
+setInterval(async () => {
+  try {
+    const r = await fetch(STATO_URL);
+    const stato = await r.json();
 
-/  const operativo =
-/    mode === "marcia" ||
-/    mode === "automatico" ||
-/    mode === "svuotamento";
+    if (!stato) return;
 
-/  btnStart.style.display = operativo ? "block" : "none";
-/  btnStop.style.display  = operativo ? "block" : "none";
-/  btnCheck.style.display = (mode === "automatico") ? "block" : "none";
-/}
-  
+    document.getElementById("stato").innerText =
+      "STATO: " + stato;
+
+    aggiornaUI(stato);
+  } catch (e) {}
+}, 1000);
 
 /* ===== COMANDI ===== */
 async function sendCmd(cmd) {
+  if (lock) return;
+  lock = true;
+
+  if (navigator.vibrate) navigator.vibrate(30);
+
   await fetch(CMD_URL, {
     method: "PUT",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(cmd)
   });
+
+  setTimeout(() => lock = false, 1000);
 }
 
-/* ===== CHECKLIST ===== */
-function openChecklist() {
-  window.location.href = "checklist.html";
+async function stopCmd() {
+  if (lock) return;
+
+  if (!window.stopArmed) {
+    window.stopArmed = true;
+    await sendCmd("stop");
+    return;
+  }
+
+  if (confirm("Confermi STOP macchina?")) {
+    await sendCmd("stop_confirm");
+  }
+
+  window.stopArmed = false;
 }
 </script>
-
-</body>
-</html>
