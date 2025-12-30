@@ -148,30 +148,29 @@ async function main(){
     tr.dataset.part = prodotto;
     tr.dataset.dest = destProd;
 
+    // clic su riga
     tr.onclick = async function(){
-  // Rimuove evidenziazione dalle altre righe
-  document.querySelectorAll("#tbl tr").forEach(r => r.classList.remove("selected"));
-  
-  // Evidenzia la riga cliccata
-  this.classList.add("selected");
+      // evidenzia la riga
+      document.querySelectorAll("#tbl tr").forEach(r => r.classList.remove("selected"));
+      this.classList.add("selected");
 
-  // Prepara il payload per Firebase
-  const payload = {
-    idx: this.dataset.idx,
-    part: this.dataset.part,
-    dest: this.dataset.dest,
-    ts: Date.now()
-  };
+      // payload per Firebase
+      const payload = {
+        idx: this.dataset.idx,
+        part: this.dataset.part,
+        dest: this.dataset.dest,
+        ts: Date.now()
+      };
 
-  console.log("SCRIVO FIREBASE:", payload);
-  await fbSet("/partenza/select", payload);
+      console.log("SCRIVO FIREBASE:", payload);
+      await fbSet("/partenza/select", payload);
 
-  // Mostra messaggio di conferma
-  const conferma = confirm(`Hai selezionato:\nPRODOTTO: ${payload.part}\nVuoi tornare alla schermata principale?`);
-  if(conferma){
-    window.location.href = "index_def.html";
-  }
-};
+      // conferma e ritorno
+      const conferma = confirm(`Hai selezionato:\nPRODOTTO: ${payload.part}\nVuoi tornare alla schermata principale?`);
+      if(conferma){
+        window.location.href = "index_def.html";
+      }
+    };
 
     tbody.appendChild(tr);
   }
