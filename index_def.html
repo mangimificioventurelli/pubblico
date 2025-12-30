@@ -1,40 +1,171 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bilancia - Index Def</title>
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #111;
+  color: #fff;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  gap: 28px;
+}
+
+#peso {
+  font-size: 72px;
+  font-weight: bold;
+}
+
+#stato {
+  font-size: 36px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  background: #222;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 80%;
+  max-width: 360px;
+  /* Mantieni fissi i bottoni */
+  align-items: stretch;
+}
+
+button {
+  height: 72px;
+  font-size: 26px;
+  font-weight: bold;
+  border-radius: 18px;
+  border: none;
+  color: white;
+  touch-action: manipulation;
+  display: block;
+}
+
+.btn-start { background: #00a84f; }
+.btn-stop  { background: #d72626; }
+.btn-reset { background: #555; }
+.btn-check { background: #ff9800; }
+
+button:active {
+  transform: scale(0.97);
+  opacity: 0.85;
+}
+
+/* Mantieni spazio anche quando bottone nascosto */
+button.hidden { visibility: hidden; }
+</style>
+</head>
+
+<body>
+
+<div class="app">
+  <div id="peso">---</div>
+  <div id="stato">STATO: ---</div>
+
+  <div class="buttons">
+    <button class="btn-start" onclick="sendCmd('start')">START</button>
+    <button class="btn-stop"  onclick="stopCmd()">STOP</button>
+    <button class="btn-reset" onclick="sendCmd('reset')">RESET ALLARMI</button>
+    <button class="btn-check hidden">CHECKLIST</button>
+  </div>
+</div>
+
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const btnStart = document.querySelector(".btn-start");
-  const btnStop  = document.querySelector(".btn-stop");
-  const btnReset = document.querySelector(".btn-reset");
-  const btnCheck = document.querySelector(".btn-check");
+const BASE = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+const PESO_URL = BASE + "/peso.json";
+const STATO_URL = BASE + "/stato.json";
+const CMD_URL  = BASE + "/cmd.json";
 
-  // funzione per mostrare/nascondere bottoni in base allo stato
-  function aggiornaUI(stato) {
-    if (!stato) return;
+const btnStart = document.querySelector(".btn-start");
+const btnStop  = document.querySelector(".btn-stop");
+const btnReset = document.querySelector(".btn-reset");
+const btnCheck = document.querySelector(".btn-check");
 
-    stato = stato.toLowerCase();
+let lock = false;
 
-    const operativo = ["marcia","automatico","svuotamento"].includes(stato);
+// ================== LETTURA PESO ==================
+async function aggiornaPeso() {
+  try {
+    const r = await fetch(PESO_URL);
+    const peso = await r.json();
+    if (peso !== null && peso !== "") {
+      document.getElementById("peso").innerText = peso;
+    }
+  } catch(e) {}
+}
+setInterval(aggiornaPeso, 500);
 
-    btnStart.style.display = operativo ? "block" : "none";
-    btnStop.style.display  = operativo ? "block" : "none";
-    btnReset.style.display = "block";
-    btnCheck.style.display = (stato === "automatico") ? "block" : "none";
+// ================== INVIO COMANDI ==================
+async function sendCmd(cmd){
+  if(lock) return;
+  lock = true;
+  if(navigator.vibrate) navigator.vibrate(30);
+  await fetch(CMD_URL,{
+    method:"PUT",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify(cmd)
+  });
+  setTimeout(()=>lock=false,1000);
+}
+
+async function stopCmd(){
+  if(lock) return;
+
+  if(!window.stopArmed){
+    window.stopArmed = true;
+    await sendCmd("stop");
+    return;
   }
 
-  // collegamento bottone CHECKLIST
-  btnCheck.addEventListener("click", () => {
-    window.location.href = "checklist.html";  // apre la checklist
-  });
+  if(confirm("Confermi STOP macchina?")){
+    await sendCmd("stop_confirm");
+  }
+  window.stopArmed = false;
+}
 
-  // test automatico: cambia stato ogni 3 secondi
-  let stati = ["marcia","automatico","svuotamento","manutenzione"];
-  let i = 0;
-  setInterval(() => {
-    const s = stati[i % stati.length];
-    document.getElementById("stato").innerText = s;
-    aggiornaUI(s);
-    i++;
-  }, 3000);
+// ================== LETTURA STATO E BOTTONI ==================
+function aggiornaUI(stato){
+  if(!stato) return;
+  stato = stato.toLowerCase();
+  const operativo = ["marcia","automatico","svuotamento"].includes(stato);
 
-  // inizializza UI correttamente al primo caricamento
-  aggiornaUI(document.getElementById("stato").innerText);
+  btnStart.classList.toggle("hidden", !operativo);
+  btnStop.classList.toggle("hidden", !operativo);
+  btnReset.classList.toggle("hidden", false); // sempre visibile
+  btnCheck.classList.toggle("hidden", stato !== "automatico");
+}
+
+async function leggiStato(){
+  try{
+    const r = await fetch(STATO_URL);
+    const stato = await r.json();
+    document.getElementById("stato").innerText = "STATO: " + stato;
+    aggiornaUI(stato);
+  } catch(e){}
+}
+setInterval(leggiStato, 1000);
+
+// ================== CHECKLIST ==================
+btnCheck.addEventListener("click", ()=>{
+  window.location.href = "checklist.html";
 });
 </script>
+
+</body>
+</html>
