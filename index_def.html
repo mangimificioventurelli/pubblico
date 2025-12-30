@@ -100,6 +100,11 @@ document.addEventListener("DOMContentLoaded", () => {
     btnCheck.style.display = (stato === "automatico") ? "block" : "none";
   }
 
+  // collegamento bottone CHECKLIST
+  btnCheck.addEventListener("click", () => {
+    window.location.href = "checklist.html";  // apre la checklist
+  });
+
   // test automatico: cambia stato ogni 3 secondi
   let stati = ["marcia","automatico","svuotamento","manutenzione"];
   let i = 0;
