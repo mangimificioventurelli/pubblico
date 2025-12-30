@@ -103,6 +103,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnReset = document.querySelector(".btn-reset");
   const btnCheck = document.querySelector(".btn-check");
 
+ 
+btnCheck.onclick = async () => {
+  await sendCmd("checklist");
+  alert("Avvio checklist… attendere");
+};
+
+  
+
   let lock = false;
 
   // ===== LETTURA PESO =====
@@ -194,22 +202,23 @@ async function aggiornaSelezione() {
 setInterval(aggiornaSelezione, 1000); // aggiorna ogni secondo
 
 
-  const btnCheck = document.querySelector(".btn-check");
 
-btnCheck.onclick = async () => {
-  await sendCmd("checklist");
-  alert("Avvio checklist… attendere");
-};
 
-  setInterval(async () => {
-  const r = await fetch(BASE + "/ui/checklist_ready.json");
-  const ready = await r.json();
+setInterval(async () => {
+  try {
+    const r = await fetch(BASE + "/ui/checklist_ready.json");
+    const ready = await r.json();
 
-  if (ready === true) {
-    await fetch(BASE + "/ui/checklist_ready.json", { method: "DELETE" });
-    window.location.href = "checklist.html";
-  }
+    if (ready === true) {
+      // pulizia flag
+      await fetch(BASE + "/ui/checklist_ready.json", { method: "DELETE" });
+
+      // ORA possiamo aprire la checklist
+      window.location.href = "checklist.html";
+    }
+  } catch (e) {}
 }, 500);
+  
 
   
 </script>
