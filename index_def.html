@@ -201,6 +201,16 @@ btnCheck.onclick = async () => {
   alert("Avvio checklist… attendere");
 };
 
+  setInterval(async () => {
+  const r = await fetch(BASE + "/ui/checklist_ready.json");
+  const ready = await r.json();
+
+  if (ready === true) {
+    await fetch(BASE + "/ui/checklist_ready.json", { method: "DELETE" });
+    window.location.href = "checklist.html";
+  }
+}, 500);
+
   
 </script>
 
