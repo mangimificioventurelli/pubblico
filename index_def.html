@@ -57,6 +57,7 @@
   .btn-start { background: #00a84f; }
   .btn-stop  { background: #d72626; }
   .btn-reset { background: #555; }
+  .btn-check { background: #0077ff; }
 
   button:active {
     transform: scale(0.97);
@@ -74,6 +75,7 @@
     <button class="btn-start" onclick="alert('START premuto')">START</button>
     <button class="btn-stop" onclick="alert('STOP premuto')">STOP</button>
     <button class="btn-reset" onclick="alert('RESET premuto')">RESET ALLARMI</button>
+    <button class="btn-check" onclick="alert('CHECKLIST premuto')">CHECKLIST</button>
   </div>
 </div>
 
@@ -82,8 +84,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnStart = document.querySelector(".btn-start");
   const btnStop  = document.querySelector(".btn-stop");
   const btnReset = document.querySelector(".btn-reset");
+  const btnCheck = document.querySelector(".btn-check");
 
-  // funzione esempio per mostrare/nascondere bottoni
+  // funzione per mostrare/nascondere bottoni in base allo stato
   function aggiornaUI(stato) {
     if (!stato) return;
     stato = stato.toLowerCase();
@@ -93,19 +96,8 @@ document.addEventListener("DOMContentLoaded", () => {
     btnStart.style.display = operativo ? "block" : "none";
     btnStop.style.display  = operativo ? "block" : "none";
     btnReset.style.display = "block";
+    btnCheck.style.display = (stato === "automatico") ? "block" : "none";
   }
 
-  // Test manuale: cambia stato ogni 3 secondi
-  let stati = ["marcia","automatico","svuotamento","manutenzione"];
-  let i = 0;
-  setInterval(() => {
-    const s = stati[i % stati.length];
-    document.getElementById("stato").innerText = "STATO: " + s;
-    aggiornaUI(s);
-    i++;
-  }, 3000);
-});
-</script>
-
-</body>
-</html>
+  // test manuale: cambia stato ogni 3 secondi
+  let stati = ["marcia","automatico","svuotamento"]()
