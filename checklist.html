@@ -7,26 +7,22 @@
 
 <style>
 body {
+  font-family: Arial, sans-serif;
   background: #111;
   color: #eee;
-  font-family: Arial, sans-serif;
   margin: 0;
   padding: 10px;
 }
 
-h2 { text-align: center; }
-
-#info {
-  background: #222;
-  padding: 10px;
-  border-radius: 6px;
-  margin-bottom: 10px;
+h2 {
+  text-align: center;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  margin-bottom: 20px;
 }
 
 th, td {
@@ -34,8 +30,41 @@ th, td {
   border-bottom: 1px solid #333;
 }
 
-tr { cursor: pointer; }
-tr.selected { background: #ffd966; }
+th {
+  background: #222;
+  position: sticky;
+  top: 0;
+}
+
+tr {
+  cursor: pointer;
+}
+
+tr.selected {
+  background: #ffd966;
+}  
+
+tr:hover {
+  background: #2a2a2a;
+}
+
+button {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 12px;
+  border: none;
+  color: white;
+  background: #0077ff;
+  margin: 0 auto;
+  display: block;
+  cursor: pointer;
+}
+
+button:active {
+  transform: scale(0.97);
+  opacity: 0.85;
+}
 </style>
 </head>
 
@@ -43,88 +72,107 @@ tr.selected { background: #ffd966; }
 
 <h2>CHECKLIST PARTENZA</h2>
 
-<div id="info">
-  <b>Prodotto DEST:</b> <span id="destProd">—</span>
-</div>
-
-<table>
-<thead>
-<tr>
-  <th>Idx</th>
-  <th>Estr.</th>
-  <th>Prodotto</th>
-  <th>OCR</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
+<table id="tbl">
+  <thead>
+    <tr>
+      <th>Idx</th>
+      <th>Prodotto</th>
+      <th>Estrattore</th>
+      <th>Testo OCR</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
 </table>
 
-<script>
-const FB =
-  "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+<button onclick="tornaIndex()">Torna a Start/Stop</button>
 
+<script>
+const FIREBASE = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+
+/* =================== UTILS =================== */
 function norm(s) {
-  return (s || "")
-    .toUpperCase()
-    .replace(/0/g,"O")
-    .replace(/1/g,"I")
-    .replace(/[^A-Z ]/g," ")
-    .replace(/\s+/g," ")
-    .trim();
+  return s.toUpperCase().replace(/0/g,"O").replace(/1/g,"I").replace(/[^A-Z ]/g,"").replace(/\s+/g," ").trim();
 }
 
-async function fbGet(p) {
-  const r = await fetch(FB + p + ".json");
+function estraiProdotto(testo) {
+  const t = norm(testo);
+  const prodotti = ["GRANTURCO SCHIACCIATO SF","GRANTURCO","ORZO","FARINA DI SOIA","FIOCCHI DI SOIA","FARINA DI GIRASOLE","CRUSCA DI FRUMENTO","POLPA DI BARBABIETOLE","GUSCI DI SEMI"];
+  for(const p of prodotti) if(t.includes(p)) return p;
+  return "";
+}
+
+function estraiEstrattore(testo){
+  let m = testo.match(/\bS\d{1,2}\b/) || testo.match(/\$\d{1,2}/) || testo.match(/\b\d{1,2}\b/);
+  return m ? m[0] : "";
+}
+
+/* =================== FIREBASE =================== */
+async function fbGet(path){
+  const r = await fetch(FIREBASE + path + ".json");
   return await r.json();
 }
 
-async function fbSet(p, v) {
-  await fetch(FB + p + ".json", {
-    method: "PUT",
-    body: JSON.stringify(v)
+async function fbSet(path,val){
+  await fetch(FIREBASE + path + ".json",{
+    method:"PUT",
+    body: JSON.stringify(val)
   });
 }
 
-async function main() {
+/* =================== MAIN =================== */
+async function main(){
+  const destProdRaw = await fbGet("/dest/prodotto");
+  const destProd = norm(destProdRaw || "");
 
-  const dest = norm(await fbGet("/dest/prodotto"));
-  document.getElementById("destProd").innerText = dest || "—";
+  const data = await fbGet("/partenza/lista");
+  if(!data || typeof data !== "object") return;
 
-  const lista = await fbGet("/partenza/lista");
-  if (!lista) return;
+  const tbody = document.querySelector("#tbl tbody");
+  tbody.innerHTML = "";
 
-  const tb = document.getElementById("tbody");
+  for(const key in data){
+    const row = data[key];
+    if(!row || !row.testo) continue;
 
-  for (const idx in lista) {
-    const r = lista[idx];
-    if (!r || !r.testo) continue;
+    const prodotto = estraiProdotto(row.testo);
+    if(!prodotto) continue;
+    if(destProd && !prodotto.includes(destProd)) continue;
 
-    const prod = norm(r.testo);
-    if (dest && !prod.includes(dest)) continue;
+    const estr = estraiEstrattore(row.testo);
 
     const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${idx}</td>
-      <td>—</td>
-      <td>${dest}</td>
-      <td>${r.testo}</td>
-    `;
+    tr.innerHTML = `<td>${key}</td><td>${prodotto}</td><td>${estr}</td><td>${row.testo}</td>`;
 
-    tr.onclick = async () => {
-      await fbSet("/partenza/select", {
-        idx: Number(idx),
-        part: dest,
-        dest: dest,
+    // dati coerenti
+    tr.dataset.idx = Number(key);
+    tr.dataset.part = prodotto;
+    tr.dataset.dest = destProd;
+
+    tr.onclick = async function(){
+      document.querySelectorAll("#tbl tr").forEach(r=>r.classList.remove("selected"));
+      this.classList.add("selected");
+
+      const payload = {
+        idx: this.dataset.idx,
+        part: this.dataset.part,
+        dest: this.dataset.dest,
         ts: Date.now()
-      });
+      };
 
-      window.location.href = "index_def.html";
+      console.log("SCRIVO FIREBASE:", payload);
+      await fbSet("/partenza/select", payload);
+      alert(`Selezionato: ${payload.part}`);
     };
 
-    tb.appendChild(tr);
+    tbody.appendChild(tr);
   }
 }
 
+function tornaIndex(){
+  window.location.href = "index_def.html";
+}
+
+/* =================== START =================== */
 main();
 </script>
 
