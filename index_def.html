@@ -196,8 +196,9 @@ setInterval(aggiornaSelezione, 1000); // aggiorna ogni secondo
 
   const btnCheck = document.querySelector(".btn-check");
 
-btnCheck.onclick = () => {
-  sendCmd("checklist");
+btnCheck.onclick = async () => {
+  await sendCmd("checklist");
+  alert("Avvio checklist… attendere");
 };
 
   
