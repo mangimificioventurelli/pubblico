@@ -98,27 +98,73 @@ setInterval(async () => {
   if (p !== null) document.getElementById("peso").innerText = p;
 }, 500);
 
-/* ===== STATO + UI ===== */
-setInterval(async () => {
-  const r = await fetch(STATO_URL);
-  const mode = await r.json();
-  if (!mode) return;
+/* ===== STATO ===== */
+let lastValidState = null;
 
-  document.getElementById("stato").innerText = "STATO: " + mode;
-  aggiornaUI(mode);
+setInterval(async () => {
+  try {
+    const r = await fetch(STATO_URL);
+    const stato = await r.json();
+
+    // ❌ ignora valori non validi
+    if (typeof stato !== "string" || stato.trim() === "") {
+      return;
+    }
+
+    // ✅ memorizza ultimo stato valido
+    lastValidState = stato;
+
+    document.getElementById("stato").innerText =
+      "STATO: " + stato;
+
+    aggiornaUI(stato);
+
+  } catch (e) {
+    // errore di rete → NON toccare UI
+  }
 }, 800);
 
+  
+/setInterval(async () => {
+/  const r = await fetch(STATO_URL);
+/  const mode = await r.json();
+/  if (!mode) return;
+
+/  document.getElementById("stato").innerText = "STATO: " + mode;
+/  aggiornaUI(mode);
+/}, 800);
+
+
+/* ===== AGGIORNA UI ===== */  
 function aggiornaUI(mode) {
 
-  const operativo =
-    mode === "marcia" ||
-    mode === "automatico" ||
-    mode === "svuotamento";
+  const operativo = [
+    "marcia",
+    "automatico",
+    "svuotamento"
+  ].includes(mode);
 
   btnStart.style.display = operativo ? "block" : "none";
   btnStop.style.display  = operativo ? "block" : "none";
-  btnCheck.style.display = (mode === "automatico") ? "block" : "none";
+
+  btnCheck.style.display =
+    (mode === "automatico") ? "block" : "none";
 }
+
+  
+  
+  /function aggiornaUI(mode) {
+
+/  const operativo =
+/    mode === "marcia" ||
+/    mode === "automatico" ||
+/    mode === "svuotamento";
+
+/  btnStart.style.display = operativo ? "block" : "none";
+/  btnStop.style.display  = operativo ? "block" : "none";
+/  btnCheck.style.display = (mode === "automatico") ? "block" : "none";
+/}
+  
 
 /* ===== COMANDI ===== */
 async function sendCmd(cmd) {
