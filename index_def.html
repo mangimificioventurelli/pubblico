@@ -9,6 +9,7 @@
 html, body {
   margin: 0;
   padding: 0;
+  
   height: 100%;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: #111;
@@ -80,7 +81,7 @@ button.hidden { visibility: hidden; }
     <button class="btn-start" onclick="sendCmd('start')">START</button>
     <button class="btn-stop"  onclick="stopCmd()">STOP</button>
     <button class="btn-reset" onclick="sendCmd('reset')">RESET ALLARMI</button>
-    <button class="btn-check hidden">CHECKLIST</button>
+    <button class="btn-check" onclick="apriChecklist()">CHECKLIST</button>
     
   </div>
 
@@ -218,6 +219,33 @@ setInterval(async () => {
     }
   } catch (e) {}
 }, 500);
+
+  const CHECK_URL = BASE + "/stato/checklist.json";
+
+let checklistWaiting = false;
+
+async function apriChecklist() {
+  checklistWaiting = true;
+  document.getElementById("info").innerText = "⏳ Preparazione checklist...";
+  sendCmd("checklist");
+}
+
+setInterval(async () => {
+  if (!checklistWaiting) return;
+
+  const r = await fetch(CHECK_URL);
+  const stato = await r.json();
+
+  if (stato === "ready") {
+    checklistWaiting = false;
+    window.location.href = "checklist.html";
+  }
+
+  if (stato === "error") {
+    checklistWaiting = false;
+    alert("Errore preparazione checklist");
+  }
+}, 1000);
   
 
   
