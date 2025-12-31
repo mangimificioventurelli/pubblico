@@ -213,21 +213,20 @@ setInterval(async () => {
     const r = await fetch(BASE + "/ui/checklist_ready.json");
     const ready = await r.json();
 
-    if (ready === true || ready === "true") {
-  await fetch(BASE + "/ui/checklist_ready.json", {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(null)
-});
-  window.location.href = "checklist.html";
-}
+    if (ready === true) {
+      // Consuma il flag in modo definitivo
+      await fetch(BASE + "/ui/checklist_ready.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(null)
+      });
 
-      // ORA possiamo aprire la checklist
+      // Ora apriamo checklist.html
       window.location.href = "checklist.html";
     }
   } catch (e) {
-  console.error("Errore controllo checklist_ready:", e);
-}
+    console.error("Polling checklist error:", e);
+  }
 }, 500);
 
   const CHECK_URL = BASE + "/stato/checklist.json";
