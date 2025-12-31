@@ -187,6 +187,9 @@ btnCheck.onclick = async () => {
 });
 
 
+
+  
+
   // selezione da checklist
 async function aggiornaSelezione() {
   try {
@@ -210,14 +213,17 @@ setInterval(async () => {
     const r = await fetch(BASE + "/ui/checklist_ready.json");
     const ready = await r.json();
 
-    if (ready === true) {
-      // pulizia flag
-      await fetch(BASE + "/ui/checklist_ready.json", { method: "DELETE" });
+    if (ready === true || ready === "true") {
+  await fetch(BASE + "/ui/checklist_ready.json", { method: "DELETE" });
+  window.location.href = "checklist.html";
+}
 
       // ORA possiamo aprire la checklist
       window.location.href = "checklist.html";
     }
-  } catch (e) {}
+  } catch (e) {
+  console.error("Errore controllo checklist_ready:", e);
+}
 }, 500);
 
   const CHECK_URL = BASE + "/stato/checklist.json";
