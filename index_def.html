@@ -214,7 +214,11 @@ setInterval(async () => {
     const ready = await r.json();
 
     if (ready === true || ready === "true") {
-  await fetch(BASE + "/ui/checklist_ready.json", { method: "DELETE" });
+  await fetch(BASE + "/ui/checklist_ready.json", {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(null)
+});
   window.location.href = "checklist.html";
 }
 
