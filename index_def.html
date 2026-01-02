@@ -233,34 +233,32 @@ setInterval(async () => {
   }
 }, 500);
 
-  const CHECK_URL = BASE + "/stato/checklist.json";
-
-let checklistWaiting = false;
 
 async function apriChecklist() {
-  checklistWaiting = true;
-  document.getElementById("info").innerText = "⏳ Preparazione checklist...";
-  sendCmd("checklist");
+  document.getElementById("info").innerText =
+    "⏳ Preparazione checklist…";
+  await sendCmd("checklist");
 }
 
-setInterval(async () => {
-  if (!checklistWaiting) return;
-
-  const r = await fetch(CHECK_URL);
-  const stato = await r.json();
-
-  if (stato === "ready") {
-    checklistWaiting = false;
-    window.location.href = "checklist.html";
-  }
-
-  if (stato === "error") {
-    checklistWaiting = false;
-    alert("Errore preparazione checklist");
-  }
-}, 1000);
   
+ 
+setInterval(async () => {
+  try {
+    const r = await fetch(BASE + "/ui/checklist_ready.json");
+    const ready = await r.json();
 
+    if (ready === true) {
+      // consuma il flag (anti zombie)
+      await fetch(BASE + "/ui/checklist_ready.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(null)
+      });
+
+      window.location.href = "checklist.html";
+    }
+  } catch {}
+}, 500);
   
 </script>
 
