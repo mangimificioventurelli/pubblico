@@ -81,7 +81,8 @@ button.hidden { visibility: hidden; }
     <button class="btn-start" onclick="sendCmd('start')">START</button>
     <button class="btn-stop"  onclick="stopCmd()">STOP</button>
     <button class="btn-reset" onclick="sendCmd('reset')">RESET ALLARMI</button>
-    <button class="btn-check" onclick="apriChecklist()">CHECKLIST</button>
+    <button class="btn-check" id="btnCheck">CHECKLIST</button>
+
     
   </div>
 
@@ -104,12 +105,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnReset = document.querySelector(".btn-reset");
   const btnCheck = document.querySelector(".btn-check");
 
- 
+
+
+  const btnCheck = document.getElementById("btnCheck");
+
 btnCheck.onclick = async () => {
   await sendCmd("checklist");
   alert("Avvio checklist… attendere");
 };
-
+ 
   
 
   let lock = false;
