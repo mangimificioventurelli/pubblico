@@ -10,9 +10,9 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: system-ui, sans-serif;
   background: #111;
   color: #fff;
+  font-family: system-ui, sans-serif;
 }
 
 .app {
@@ -21,7 +21,7 @@ html, body {
   justify-content: center;
   align-items: center;
   height: 100%;
-  gap: 20px;
+  gap: 24px;
 }
 
 #peso {
@@ -30,56 +30,156 @@ html, body {
 }
 
 #stato {
-  font-size: 28px;
+  font-size: 32px;
   padding: 10px 20px;
-  border-radius: 10px;
   background: #222;
+  border-radius: 12px;
 }
 
 .buttons {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
   width: 80%;
   max-width: 360px;
 }
 
 button {
-  height: 64px;
-  font-size: 22px;
+  height: 70px;
+  font-size: 26px;
   font-weight: bold;
   border-radius: 16px;
   border: none;
-  color: white;
+  color: #fff;
 }
 
 .btn-start { background: #00a84f; }
 .btn-stop  { background: #d72626; }
 .btn-reset { background: #555; }
-.btn-check { background: #1e6bd6; }
+.btn-check { background: #1e90ff; }
 
 .hidden { display: none; }
+
+#info {
+  margin-top: 10px;
+  font-size: 18px;
+  opacity: 0.9;
+}
 </style>
 </head>
 
-<body style="background:#111; color:white;">
+<body>
 
-<button id="btnCheck"
-  style="
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    z-index: 99999;
-    font-size: 24px;
-    padding: 20px;
-  ">
-  CHECKLIST
-</button>
+<div class="app">
+
+  <div id="peso">---</div>
+  <div id="stato">STATO: ---</div>
+
+  <div class="buttons">
+    <button class="btn-start" id="btnStart">START</button>
+    <button class="btn-stop"  id="btnStop">STOP</button>
+    <button class="btn-reset" id="btnReset">RESET ALLARMI</button>
+    <button class="btn-check hidden" id="btnCheck">CHECKLIST</button>
+  </div>
+
+  <div id="info"></div>
+
+</div>
 
 <script>
-document.getElementById("btnCheck").onclick = () => {
-  alert("CLICK FUNZIONA");
+/* ================== CONFIG ================== */
+
+const BASE =
+  "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+
+const PESO_URL  = BASE + "/peso.json";
+const STATO_URL = BASE + "/stato.json";
+const CMD_URL   = BASE + "/cmd.json";
+const UI_STATE  = BASE + "/ui/state.json";
+
+/* ================== UTILS ================== */
+
+async function fbGet(url) {
+  const r = await fetch(url);
+  return await r.json();
+}
+
+async function fbSet(url, val) {
+  await fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(val)
+  });
+}
+
+/* ================== PESO ================== */
+
+async function aggiornaPeso() {
+  try {
+    const peso = await fbGet(PESO_URL);
+    if (peso !== null && peso !== "")
+      document.getElementById("peso").innerText = peso;
+  } catch {}
+}
+setInterval(aggiornaPeso, 500);
+
+/* ================== STATO ================== */
+
+async function aggiornaStato() {
+  try {
+    const stato = await fbGet(STATO_URL);
+    if (!stato) return;
+
+    document.getElementById("stato").innerText = "STATO: " + stato;
+
+    const btnCheck = document.getElementById("btnCheck");
+
+    // checklist SOLO in automatico
+    if (stato === "automatico") {
+      btnCheck.classList.remove("hidden");
+    } else {
+      btnCheck.classList.add("hidden");
+    }
+  } catch {}
+}
+setInterval(aggiornaStato, 1000);
+
+/* ================== COMANDI ================== */
+
+async function sendCmd(cmd) {
+  await fbSet(CMD_URL, cmd);
+}
+
+document.getElementById("btnStart").onclick = () => sendCmd("start");
+document.getElementById("btnStop").onclick  = () => sendCmd("stop");
+document.getElementById("btnReset").onclick = () => sendCmd("reset");
+
+document.getElementById("btnCheck").onclick = async () => {
+  document.getElementById("info").innerText = "⏳ Preparazione checklist...";
+  await sendCmd("checklist");
 };
+
+/* ================== UI STATE ================== */
+
+setInterval(async () => {
+  try {
+    const state = await fbGet(UI_STATE);
+
+    if (state === "ready") {
+      window.location.href = "checklist.html";
+    }
+
+    if (state === "ok") {
+      document.getElementById("info").innerText = "✅ Verifica completata";
+    }
+
+    if (state === "error") {
+      document.getElementById("info").innerText = "❌ Errore verifica";
+    }
+
+  } catch {}
+}, 500);
+
 </script>
 
 </body>
