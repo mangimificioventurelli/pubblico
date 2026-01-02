@@ -73,7 +73,7 @@ button {
     <button class="btn-start" onclick="sendCmd('start')">START</button>
     <button class="btn-stop"  onclick="stopCmd()">STOP</button>
     <button class="btn-reset" onclick="sendCmd('reset')">RESET</button>
-    <button class="btn-check" onclick="apriChecklist()">CHECKLIST</button>
+    <button class="btn-check" id="btnCheck">CHECKLIST</button>
   </div>
 
 </div>
@@ -81,8 +81,9 @@ button {
 <script>
 /* ================= CONFIG ================= */
 
-const BASE =
-  "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+const BASE = "https://your-firebase-url"; // Cambia con il tuo URL Firebase
+    const CHECK_URL = BASE + "/ui/checklist_ready.json"; // Deve corrispondere al flag che AHK imposta
+    let checklistWaiting = false;
 
 /* ================= UTILS ================= */
 
@@ -123,14 +124,17 @@ setInterval(async () => {
 
 let lock = false;
 
-async function sendCmd(cmd) {
-  if (lock) return;
-  lock = true;
 
-  await fbSet("/cmd", cmd);
-
-  setTimeout(() => lock = false, 800);
-}
+  
+  async function sendCmd(cmd) {
+      // Scrive comando su Firebase
+      await fetch(BASE + "/cmd.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cmd)
+      });
+    }
+  
 
 let stopArmed = false;
 
@@ -148,26 +152,46 @@ async function stopCmd() {
 
 /* ================= CHECKLIST ================= */
 
-async function apriChecklist() {
-  document.getElementById("stato").innerText =
-    "STATO: preparazione checklist…";
-  await sendCmd("checklist");
-}
+    async function apriChecklist() {
+      if (checklistWaiting) return; // blocca click multipli
+      checklistWaiting = true;
+      document.getElementById("info").innerText = "⏳ Preparazione checklist...";
+      await sendCmd("checklist"); // invia comando ad AHK
+    }
+
+    document.getElementById("btnCheck").onclick = apriChecklist;
 
 /* AHK decide QUANDO è pronta */
-setInterval(async () => {
-  try {
-    const ready = await fbGet("/ui/checklist_ready");
-    if (ready === true) {
+    setInterval(async () => {
+      if (!checklistWaiting) return;
 
-      // consuma flag (anti zombie)
-      await fbSet("/ui/checklist_ready", null);
+      try {
+        const r = await fetch(CHECK_URL);
+        const stato = await r.json();
 
-      window.location.href = "checklist.html";
-    }
-  } catch {}
-}, 500);
-</script>
+        if (stato === true || stato === "ready") {
+          // Reset flag lato Firebase per il prossimo ciclo
+          await fetch(CHECK_URL, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(null)
+          });
+
+          checklistWaiting = false;
+          document.getElementById("info").innerText = "✅ Checklist pronta, aprendo...";
+          window.location.href = "checklist.html"; // Apri pagina checklist
+        }
+
+        if (stato === "error") {
+          checklistWaiting = false;
+          document.getElementById("info").innerText = "";
+          alert("❌ Errore preparazione checklist");
+        }
+
+      } catch (e) {
+        console.error("Polling checklist error:", e);
+      }
+    }, 1000); // ogni secondo
 
 </body>
 </html>
