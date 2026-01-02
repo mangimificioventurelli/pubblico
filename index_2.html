@@ -62,142 +62,25 @@ button {
 </style>
 </head>
 
-<body>
+<body style="background:#111; color:white;">
 
-<div class="app">
-
-  <div id="peso">---</div>
-  <div id="stato">STATO: ---</div>
-
-  <div class="buttons">
-    <button class="btn-start" onclick="sendCmd('start')">START</button>
-    <button class="btn-stop"  onclick="stopCmd()">STOP</button>
-    <button class="btn-reset" onclick="sendCmd('reset')">RESET</button>
-    <button class="btn-check" id="btnCheck">CHECKLIST</button>
-  </div>
-
-</div>
+<button id="btnCheck"
+  style="
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 99999;
+    font-size: 24px;
+    padding: 20px;
+  ">
+  CHECKLIST
+</button>
 
 <script>
+document.getElementById("btnCheck").onclick = () => {
+  alert("CLICK FUNZIONA");
+};
+</script>
 
-
-  console.log("JS caricato");
-
-document.body.addEventListener("click", () => {
-  console.log("CLICK OK");
-});
-/* ================= CONFIG ================= */
-
-const BASE = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/"; // Cambia con il tuo URL Firebase
-    const CHECK_URL = BASE + "/ui/checklist_ready.json"; 
-let checklistWaiting = false;
-
-/* ================= UTILS ================= */
-
-async function fbGet(path) {
-  const r = await fetch(BASE + path + ".json");
-  return await r.json();
-}
-
-async function fbSet(path, val) {
-  await fetch(BASE + path + ".json", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(val)
-  });
-}
-
-/* ================= PESO ================= */
-
-setInterval(async () => {
-  try {
-    const peso = await fbGet("/peso");
-    if (peso !== null)
-      document.getElementById("peso").innerText = peso;
-  } catch {}
-}, 500);
-
-/* ================= STATO ================= */
-
-setInterval(async () => {
-  try {
-    const stato = await fbGet("/stato");
-    if (stato)
-      document.getElementById("stato").innerText = "STATO: " + stato;
-  } catch {}
-}, 1000);
-
-/* ================= COMANDI ================= */
-
-let lock = false;
-
-
-  
-async function sendCmd(cmd) {
-  await fetch(BASE + "/cmd.json", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(cmd)
-  });
-}
-
-let stopArmed = false;
-
-async function stopCmd() {
-  if (!stopArmed) {
-    stopArmed = true;
-    sendCmd("stop");
-    return;
-  }
-  if (confirm("Confermi STOP macchina?")) {
-    sendCmd("stop_confirm");
-  }
-  stopArmed = false;
-}
-
-/* ================= CHECKLIST ================= */
-
-   async function apriChecklist() {
-  if (checklistWaiting) return;
-  checklistWaiting = true;
-  document.getElementById("info").innerText = "⏳ Preparazione checklist...";
-  await sendCmd("checklist"); // invia comando ad AHK
-}
-
-document.getElementById("btnCheck").onclick = apriChecklist;
-
-/* AHK decide QUANDO è pronta */
- setInterval(async () => {
-  if (!checklistWaiting) return;
-
-  try {
-    const r = await fetch(CHECK_URL);
-    const stato = await r.json();
-    console.log("Polling checklist, stato:", stato);
-
-    if (stato === true || stato === "true" || stato === "ready") {
-      // Reset lato Firebase
-      await fetch(CHECK_URL, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(null)
-      });
-
-      checklistWaiting = false;
-      document.getElementById("info").innerText = "✅ Checklist pronta, aprendo...";
-      window.location.href = "checklist.html";
-    }
-
-    if (stato === "error") {
-      checklistWaiting = false;
-      document.getElementById("info").innerText = "";
-      alert("❌ Errore preparazione checklist");
-    }
-
-  } catch (e) {
-    console.error("Polling checklist error:", e);
-  }
-}, 1000);
-</script>  
 </body>
 </html>
