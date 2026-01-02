@@ -127,19 +127,23 @@ setInterval(aggiornaPeso, 500);
 
 async function aggiornaStato() {
   try {
-    const stato = await fbGet(STATO_URL);
+    let stato = await fbGet(STATO_URL);
     if (!stato) return;
 
-    document.getElementById("stato").innerText = "STATO: " + stato;
+    stato = String(stato).trim().toLowerCase();
+
+    document.getElementById("stato").innerText =
+      "STATO: " + stato.toUpperCase();
 
     const btnCheck = document.getElementById("btnCheck");
 
-    // checklist SOLO in automatico
+    // CHECKLIST visibile SOLO in automatico
     if (stato === "automatico") {
       btnCheck.classList.remove("hidden");
     } else {
       btnCheck.classList.add("hidden");
     }
+
   } catch {}
 }
 setInterval(aggiornaStato, 1000);
