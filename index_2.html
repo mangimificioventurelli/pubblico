@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bilancia</title>
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, sans-serif;
+  background: #111;
+  color: #fff;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  gap: 20px;
+}
+
+#peso {
+  font-size: 72px;
+  font-weight: bold;
+}
+
+#stato {
+  font-size: 28px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: #222;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 80%;
+  max-width: 360px;
+}
+
+button {
+  height: 64px;
+  font-size: 22px;
+  font-weight: bold;
+  border-radius: 16px;
+  border: none;
+  color: white;
+}
+
+.btn-start { background: #00a84f; }
+.btn-stop  { background: #d72626; }
+.btn-reset { background: #555; }
+.btn-check { background: #1e6bd6; }
+
+.hidden { display: none; }
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div id="peso">---</div>
+  <div id="stato">STATO: ---</div>
+
+  <div class="buttons">
+    <button class="btn-start" onclick="sendCmd('start')">START</button>
+    <button class="btn-stop"  onclick="stopCmd()">STOP</button>
+    <button class="btn-reset" onclick="sendCmd('reset')">RESET</button>
+    <button class="btn-check" onclick="apriChecklist()">CHECKLIST</button>
+  </div>
+
+</div>
+
+<script>
+/* ================= CONFIG ================= */
+
+const BASE =
+  "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+
+/* ================= UTILS ================= */
+
+async function fbGet(path) {
+  const r = await fetch(BASE + path + ".json");
+  return await r.json();
+}
+
+async function fbSet(path, val) {
+  await fetch(BASE + path + ".json", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(val)
+  });
+}
+
+/* ================= PESO ================= */
+
+setInterval(async () => {
+  try {
+    const peso = await fbGet("/peso");
+    if (peso !== null)
+      document.getElementById("peso").innerText = peso;
+  } catch {}
+}, 500);
+
+/* ================= STATO ================= */
+
+setInterval(async () => {
+  try {
+    const stato = await fbGet("/stato");
+    if (stato)
+      document.getElementById("stato").innerText = "STATO: " + stato;
+  } catch {}
+}, 1000);
+
+/* ================= COMANDI ================= */
+
+let lock = false;
+
+async function sendCmd(cmd) {
+  if (lock) return;
+  lock = true;
+
+  await fbSet("/cmd", cmd);
+
+  setTimeout(() => lock = false, 800);
+}
+
+let stopArmed = false;
+
+async function stopCmd() {
+  if (!stopArmed) {
+    stopArmed = true;
+    sendCmd("stop");
+    return;
+  }
+  if (confirm("Confermi STOP macchina?")) {
+    sendCmd("stop_confirm");
+  }
+  stopArmed = false;
+}
+
+/* ================= CHECKLIST ================= */
+
+async function apriChecklist() {
+  document.getElementById("stato").innerText =
+    "STATO: preparazione checklist…";
+  await sendCmd("checklist");
+}
+
+/* AHK decide QUANDO è pronta */
+setInterval(async () => {
+  try {
+    const ready = await fbGet("/ui/checklist_ready");
+    if (ready === true) {
+
+      // consuma flag (anti zombie)
+      await fbSet("/ui/checklist_ready", null);
+
+      window.location.href = "checklist.html";
+    }
+  } catch {}
+}, 500);
+</script>
+
+</body>
+</html>
