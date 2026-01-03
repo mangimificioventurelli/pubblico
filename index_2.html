@@ -150,7 +150,7 @@ setInterval(aggiornaStato, 1000);
 
 /* ================== COMANDI ================== */
 
-/*async function sendCmd(cmd) {
+async function sendCmd(cmd) {
   await fbSet(CMD_URL, cmd);
 }
 
@@ -162,7 +162,7 @@ document.getElementById("btnCheck").onclick = async () => {
   document.getElementById("info").innerText = "⏳ Preparazione checklist...";
   await sendCmd("checklist");
 };
-*/
+
 
   async function sendCmd(cmd) {
   await fetch(BASE + "/cmd.json", {
