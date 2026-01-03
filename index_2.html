@@ -150,7 +150,7 @@ setInterval(aggiornaStato, 1000);
 
 /* ================== COMANDI ================== */
 
-async function sendCmd(cmd) {
+/*async function sendCmd(cmd) {
   await fbSet(CMD_URL, cmd);
 }
 
@@ -162,27 +162,41 @@ document.getElementById("btnCheck").onclick = async () => {
   document.getElementById("info").innerText = "⏳ Preparazione checklist...";
   await sendCmd("checklist");
 };
+*/
+
+  async function sendCmd(cmd) {
+  await fetch(BASE + "/cmd.json", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(cmd)
+  });
+}
+
+  async function apriChecklist() {
+  checklistWaiting = true;
+  document.getElementById("info").innerText = "⏳ Preparazione checklist...";
+  await sendCmd("checklist");
+}
 
 /* ================== UI STATE ================== */
 
 setInterval(async () => {
-  try {
-    const state = await fbGet(UI_STATE);
+  if (!checklistWaiting) return;
 
-    if (state === "ready") {
-      window.location.href = "checklist.html";
-    }
+  const r = await fetch(BASE + "/ui/checklist_ready.json");
+  const ready = await r.json();
 
-    if (state === "ok") {
-      document.getElementById("info").innerText = "✅ Verifica completata";
-    }
+  if (ready === true) {
+    checklistWaiting = false;
 
-    if (state === "error") {
-      document.getElementById("info").innerText = "❌ Errore verifica";
-    }
+    await fetch(BASE + "/ui/checklist_ready.json", {
+      method: "DELETE"
+    });
 
-  } catch {}
+    window.location.href = "checklist.html";
+  }
 }, 500);
+</script>
 
 </script>
 
