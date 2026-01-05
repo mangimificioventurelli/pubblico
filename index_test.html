@@ -17,6 +17,8 @@ btnCheck.onclick = async () => {
   });
   alert("CMD SCRITTO SU FIREBASE");
 
+};
+
 setInterval(async () => {
   const r = await fetch(BASE + "/ui/open_checklist.json");
   const ok = await r.json();
@@ -33,7 +35,7 @@ setInterval(async () => {
   }
 }, 500);
 
-};
+
 
 </script>
 
