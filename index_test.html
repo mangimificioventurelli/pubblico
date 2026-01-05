@@ -9,9 +9,13 @@ const BASE =
   "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
 
 btnCheck.onclick = async () => {
-  info.innerText = "⏳ Preparazione checklist...";
-  await sendCmd("checklist");
-};
+ alert("CLICK");
+  await fetch(BASE + "/cmd.json", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify("checklist")
+  });
+  alert("CMD SCRITTO SU FIREBASE");
 
 setInterval(async () => {
   const r = await fetch(BASE + "/ui/open_checklist.json");
