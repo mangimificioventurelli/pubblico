@@ -2,21 +2,32 @@
 <html>
 <body>
 
-<button id="btn">CHECKLIST</button>
+<button class="btn-check hidden" id="btnCheck">CHECKLIST</button>
 
 <script>
 const BASE =
   "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
 
-document.getElementById("btn").onclick = async () => {
-  alert("CLICK");
-  await fetch(BASE + "/cmd.json", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify("checklist")
-  });
-  alert("CMD SCRITTO SU FIREBASE");
+btnCheck.onclick = async () => {
+  info.innerText = "⏳ Preparazione checklist...";
+  await sendCmd("checklist");
 };
+
+  setInterval(async () => {
+  const r = await fetch(BASE + "/ui/open_checklist.json");
+  const ok = await r.json();
+
+  if (ok === true) {
+    // consumalo
+    await fetch(BASE + "/ui/open_checklist.json", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(null)
+    });
+
+    window.location.href = "checklist.html";
+  }
+}, 500);
 </script>
 
 </body>
