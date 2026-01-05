@@ -170,27 +170,29 @@ document.getElementById("btnCheck").onclick = async () => {
 };
 
 
-setInterval(async () => {
-  try {
-    const r = await fetch(BASE + "/partenza/lista.json");
-    const lista = await r.json();
+const LISTA_URL = BASE + "/partenza/lista.json";
 
-    if (lista && Object.keys(lista).length > 0) {
+async function caricaChecklist() {
+  const r = await fetch(LISTA_URL);
+  const lista = await r.json();
 
-      // 🔥 CONSUMA EVENTO (fondamentale)
-      await fetch(BASE + "/partenza/lista.json", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(null)
-      });
-
-      window.location.href = "checklist.html";
-    }
-  } catch (e) {
-    console.error(e);
+  if (!lista || Object.keys(lista).length === 0) {
+    document.getElementById("info").innerText = "Nessuna lista disponibile";
+    return;
   }
-}, 800);
 
+  // 🔥 qui popoli la pagina
+  renderLista(lista);
+
+  // 🔥 ORA puoi consumarla
+  await fetch(LISTA_URL, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(null)
+  });
+}
+
+caricaChecklist();
 
 </script>
 
