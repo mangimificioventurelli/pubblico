@@ -170,30 +170,78 @@ document.getElementById("btnCheck").onclick = async () => {
 };
 
 
-const LISTA_URL = BASE + "/partenza/lista.json";
+const BASE =
+  "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+
+const LISTA_URL  = BASE + "/partenza/lista.json";
+const SELECT_URL = BASE + "/partenza/select.json";
+
+const info = document.getElementById("info");
+const listaDiv = document.getElementById("lista"); // container HTML
 
 async function caricaChecklist() {
-  const r = await fetch(LISTA_URL);
-  const lista = await r.json();
+  try {
+    const r = await fetch(LISTA_URL);
+    const lista = await r.json();
 
-  if (!lista || Object.keys(lista).length === 0) {
-    document.getElementById("info").innerText = "Nessuna lista disponibile";
-    return;
+    if (!lista || Object.keys(lista).length === 0) {
+      info.innerText = "⏳ In attesa lista partenze...";
+      return;
+    }
+
+    renderLista(lista);
+
+  } catch (e) {
+    info.innerText = "❌ Errore caricamento checklist";
+    console.error(e);
   }
+}
 
-  // 🔥 qui popoli la pagina
-  renderLista(lista);
+caricaChecklist();
 
-  // 🔥 ORA puoi consumarla
+
+  function renderLista(lista) {
+  listaDiv.innerHTML = "";
+  info.innerText = "Seleziona estrattore:";
+
+  lista.forEach(voce => {
+    const btn = document.createElement("button");
+    btn.className = "voce";
+    btn.innerText = voce.testo;
+
+    btn.onclick = () =>
+      selezionaPartenza(voce.idx, voce.prodotto, voce.dest);
+
+    listaDiv.appendChild(btn);
+  });
+}
+
+
+
+  async function selezionaPartenza(idx, part, dest) {
+  info.innerText = "⏳ Invio selezione ad AHK...";
+
+  // 1️⃣ invia selezione
+  await fetch(SELECT_URL, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      idx: idx,
+      part: part,
+      dest: dest,
+      ts: Date.now()
+    })
+  });
+
+  // 2️⃣ ORA puoi cancellare la lista (non prima)
   await fetch(LISTA_URL, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(null)
   });
+
+  info.innerText = "✅ Selezione inviata, verifica in corso...";
 }
-
-caricaChecklist();
-
 </script>
 
 
