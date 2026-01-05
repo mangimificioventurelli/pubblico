@@ -220,7 +220,7 @@ caricaChecklist();
   async function selezionaPartenza(idx, part, dest) {
   info.innerText = "⏳ Invio selezione ad AHK...";
 
-  // 1️⃣ invia selezione
+  /*// 1️⃣ invia selezione*/
   await fetch(SELECT_URL, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -232,7 +232,7 @@ caricaChecklist();
     })
   });
 
-  // 2️⃣ ORA puoi cancellare la lista (non prima)
+ /* // 2️⃣ ORA puoi cancellare la lista (non prima)*/
   await fetch(LISTA_URL, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
