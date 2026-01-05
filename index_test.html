@@ -13,7 +13,7 @@ btnCheck.onclick = async () => {
   await sendCmd("checklist");
 };
 
-  setInterval(async () => {
+setInterval(async () => {
   const r = await fetch(BASE + "/ui/open_checklist.json");
   const ok = await r.json();
 
@@ -25,7 +25,7 @@ btnCheck.onclick = async () => {
       body: JSON.stringify(null)
     });
 
-    window.location.href = "checklist-1.html";
+    window.location.href = "checklist.html";
   }
 }, 500);
 
