@@ -3,154 +3,124 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Checklist Partenza</title>
+<title>Checklist Partenze</title>
 
 <style>
-html, body {
+body {
   margin: 0;
-  padding: 0;
-  height: 100%;
+  padding: 20px;
   background: #111;
   color: #fff;
   font-family: system-ui, sans-serif;
 }
 
-.app {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  gap: 20px;
-}
-
 h1 {
-  margin: 0;
+  margin-bottom: 10px;
 }
 
 #info {
+  margin-bottom: 20px;
   font-size: 18px;
   opacity: 0.9;
 }
 
-#lista {
+.lista {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  width: 100%;
-  max-width: 500px;
+  gap: 12px;
 }
 
-button {
-  padding: 16px;
+.item {
+  padding: 14px 18px;
+  background: #222;
+  border-radius: 12px;
   font-size: 20px;
-  border-radius: 14px;
-  border: none;
-  background: #1e90ff;
-  color: #fff;
   cursor: pointer;
 }
 
-button:hover {
-  opacity: 0.85;
+.item:hover {
+  background: #1e90ff;
 }
 </style>
 </head>
 
 <body>
 
-<div class="app">
-  <h1>Checklist Partenza</h1>
-  <div id="info">⏳ In attesa lista...</div>
-  <div id="lista"></div>
-</div>
+<h1>Seleziona estrattore</h1>
+<div id="info">⏳ In attesa lista partenze…</div>
+<div class="lista" id="lista"></div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+/* ================= CONFIG ================= */
 
-  /* ================== CONFIG ================== */
+const BASE =
+  "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
 
-  const BASE =
-    "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+const LISTA_URL  = BASE + "/partenza/lista.json";
+const SELECT_URL = BASE + "/partenza/select.json";
 
-  const LISTA_URL  = BASE + "/partenza/lista.json";
-  const SELECT_URL = BASE + "/partenza/select.json";
+/* ================= UTILS ================= */
 
-  const info = document.getElementById("info");
-  const listaDiv = document.getElementById("lista");
+async function fbGet(url) {
+  const r = await fetch(url);
+  return await r.json();
+}
 
-  if (!info || !listaDiv) {
-    console.error("Elementi DOM mancanti");
-    return;
-  }
+async function fbSet(url, val) {
+  await fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(val)
+  });
+}
 
-  /* ================== CARICAMENTO LISTA ================== */
+/* ================= RENDER ================= */
 
-  async function caricaChecklist() {
-    try {
-      const r = await fetch(LISTA_URL);
-      const lista = await r.json();
+function renderLista(lista) {
+  const box = document.getElementById("lista");
+  box.innerHTML = "";
 
-      if (!lista || Object.keys(lista).length === 0) {
-        info.innerText = "⏳ In attesa lista partenze...";
-        return;
-      }
+  Object.values(lista).forEach(v => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerText = v.testo;
 
-      renderLista(lista);
+    div.onclick = async () => {
+      document.getElementById("info").innerText =
+        "✅ Selezione inviata, verifica in corso…";
 
-    } catch (e) {
-      console.error("Errore checklist:", e);
-      info.innerText = "❌ Errore caricamento checklist";
-    }
-  }
-
-  /* ================== RENDER ================== */
-
-  function renderLista(lista) {
-    listaDiv.innerHTML = "";
-    info.innerText = "Seleziona l’estrattore:";
-
-    lista.forEach(voce => {
-      const btn = document.createElement("button");
-      btn.innerText = voce.testo;
-      btn.onclick = () => selezionaPartenza(voce);
-      listaDiv.appendChild(btn);
-    });
-  }
-
-  /* ================== SELEZIONE ================== */
-
-  async function selezionaPartenza(voce) {
-    info.innerText = "⏳ Invio selezione...";
-    listaDiv.innerHTML = "";
-
-    try {
-      // invio selezione ad AHK
-      await fetch(SELECT_URL, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(voce)
+      await fbSet(SELECT_URL, {
+        idx: v.idx,
+        testo: v.testo
       });
+    };
 
-      // ORA (e solo ora) posso consumare la lista
-      await fetch(LISTA_URL, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(null)
-      });
+    box.appendChild(div);
+  });
+}
 
-      info.innerText = "✅ Selezione inviata. Attendere verifica...";
+/* ================= POLLING ================= */
 
-    } catch (e) {
-      console.error("Errore selezione:", e);
-      info.innerText = "❌ Errore invio selezione";
+async function caricaChecklist() {
+  try {
+    const lista = await fbGet(LISTA_URL);
+
+    if (!lista || Object.keys(lista).length === 0) {
+      return; // ⏳ AHK non ha ancora scritto nulla
     }
+
+    renderLista(lista);
+    document.getElementById("info").innerText =
+      "👇 Seleziona l’estrattore corretto";
+
+  } catch (e) {
+    console.error(e);
+    document.getElementById("info").innerText =
+      "❌ Errore caricamento checklist";
   }
+}
 
-  /* ================== AVVIO ================== */
-
-  caricaChecklist();
-
-});
+setInterval(caricaChecklist, 500);
 </script>
 
 </body>
