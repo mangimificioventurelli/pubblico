@@ -170,14 +170,24 @@ document.getElementById("btnCheck").onclick = async () => {
 };
 
 
-
-/* 🔥 QUESTO È L’UNICO TRIGGER */
 setInterval(async () => {
-  const r = await fetch(BASE + "/partenza/lista.json");
-  const lista = await r.json();
+  try {
+    const r = await fetch(BASE + "/partenza/lista.json");
+    const lista = await r.json();
 
-  if (lista && Object.keys(lista).length > 0) {
-    window.location.href = "checklist.html";
+    if (lista && Object.keys(lista).length > 0) {
+
+      // 🔥 CONSUMA EVENTO (fondamentale)
+      await fetch(BASE + "/partenza/lista.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(null)
+      });
+
+      window.location.href = "checklist.html";
+    }
+  } catch (e) {
+    console.error(e);
   }
 }, 800);
 
