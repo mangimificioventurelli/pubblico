@@ -16,9 +16,38 @@ document.getElementById("btn").onclick = async () => {
     body: JSON.stringify("checklist")
   });
   alert("CMD SCRITTO SU FIREBASE");
-  window.location.href = "checklist-1.html";
+
+setInterval(async () => {
+  try {
+    const r = await fetch(BASE + "/ui/checklist_ready.json");
+    const ready = await r.json();
+
+    if (ready === true) {
+      // consuma il flag (anti zombie)
+      await fetch(BASE + "/ui/checklist_ready.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(null)
+      });
+
+      window.location.href = "checklist-1.html";
+    }
+  } catch {}
+}, 500);
+
+
+
+
+  
+ 
 };
 </script>
+
+
+    
+
+
+  
 
 </body>
 </html>
