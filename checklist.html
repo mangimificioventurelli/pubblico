@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist Partenze</title>
+
+<style>
+body {
+  margin: 0;
+  padding: 20px;
+  background: #111;
+  color: #fff;
+  font-family: system-ui, sans-serif;
+}
+
+h1 {
+  margin-bottom: 10px;
+}
+
+#info {
+  margin-bottom: 20px;
+  font-size: 18px;
+  opacity: 0.9;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.item {
+  padding: 14px 18px;
+  background: #222;
+  border-radius: 12px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.item:hover {
+  background: #1e90ff;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Seleziona estrattore</h1>
+<div id="info">⏳ In attesa lista partenze…</div>
+<div class="lista" id="lista"></div>
+
+<script>
+/* ================= CONFIG ================= */
+
+const BASE =
+  "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+
+const LISTA_URL  = BASE + "/partenza/lista.json";
+const SELECT_URL = BASE + "/partenza/select.json";
+
+/* ================= UTILS ================= */
+
+async function fbGet(url) {
+  const r = await fetch(url);
+  return await r.json();
+}
+
+async function fbSet(url, val) {
+  await fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(val)
+  });
+}
+
+/* ================= RENDER ================= */
+
+function renderLista(lista) {
+  const box = document.getElementById("lista");
+  box.innerHTML = "";
+
+  Object.values(lista).forEach(v => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerText = v.testo;
+
+    div.onclick = async () => {
+      document.getElementById("info").innerText =
+        "✅ Selezione inviata, verifica in corso…";
+
+      await fbSet(SELECT_URL, {
+        idx: v.idx,
+        testo: v.testo
+      });
+    };
+
+    box.appendChild(div);
+  });
+}
+
+/* ================= POLLING ================= */
+
+async function caricaChecklist() {
+  try {
+    const lista = await fbGet(LISTA_URL);
+
+    if (!lista || Object.keys(lista).length === 0) {
+      return; // ⏳ AHK non ha ancora scritto nulla
+    }
+
+    renderLista(lista);
+    document.getElementById("info").innerText =
+      "👇 Seleziona l’estrattore corretto";
+
+  } catch (e) {
+    console.error(e);
+    document.getElementById("info").innerText =
+      "❌ Errore caricamento checklist";
+  }
+}
+
+setInterval(caricaChecklist, 500);
+</script>
+
+</body>
+</html>
