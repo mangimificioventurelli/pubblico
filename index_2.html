@@ -150,9 +150,15 @@ setInterval(aggiornaStato, 1000);
 
 /* ================== COMANDI ================== */
 
+
 async function sendCmd(cmd) {
-  await fbSet(CMD_URL, cmd);
+  await fetch(BASE + "/cmd.json", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(cmd)
+  });
 }
+  
 
 document.getElementById("btnStart").onclick = () => sendCmd("start");
 document.getElementById("btnStop").onclick  = () => sendCmd("stop");
@@ -164,41 +170,21 @@ document.getElementById("btnCheck").onclick = async () => {
 };
 
 
-  async function sendCmd(cmd) {
-  await fetch(BASE + "/cmd.json", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(cmd)
-  });
-}
 
-  async function apriChecklist() {
-  checklistWaiting = true;
-  document.getElementById("info").innerText = "⏳ Preparazione checklist...";
-  await sendCmd("checklist");
-}
-
-/* ================== UI STATE ================== */
-
+* 🔥 QUESTO È L’UNICO TRIGGER */
 setInterval(async () => {
-  if (!checklistWaiting) return;
+  const r = await fetch(BASE + "/partenza/lista.json");
+  const lista = await r.json();
 
-  const r = await fetch(BASE + "/ui/checklist_ready.json");
-  const ready = await r.json();
-
-  if (ready === true) {
-    checklistWaiting = false;
-
-    await fetch(BASE + "/ui/checklist_ready.json", {
-      method: "DELETE"
-    });
-
+  if (lista && Object.keys(lista).length > 0) {
     window.location.href = "checklist.html";
   }
-}, 500);
-</script>
+}, 800);
+
 
 </script>
+
+
 
 </body>
 </html>
