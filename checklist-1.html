@@ -89,6 +89,10 @@ button:active {
 <script>
 const FIREBASE = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
 
+  const LISTA_URL = BASE + "/partenza/lista.json";
+
+
+
 /* =================== UTILS =================== */
 function norm(s) {
   return s.toUpperCase().replace(/0/g,"O").replace(/1/g,"I").replace(/[^A-Z ]/g,"").replace(/\s+/g," ").trim();
@@ -182,6 +186,20 @@ function tornaIndex(){
 
 /* =================== START =================== */
 main();
+
+  async function caricaChecklist() {
+  const r = await fetch(LISTA_URL);
+  const lista = await r.json();
+
+  if (!lista || Object.keys(lista).length === 0) {
+    info.innerText = "⏳ In attesa lista...";
+    return;
+  }
+
+  renderLista(lista);
+}
+
+caricaChecklist();
 </script>
 
 </body>
