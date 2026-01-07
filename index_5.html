@@ -96,6 +96,7 @@ const PESO_URL  = BASE + "/peso.json";
 const STATO_URL = BASE + "/stato.json";
 const CMD_URL   = BASE + "/cmd.json";
 const OPEN_CHECKLIST_URL = BASE + "/ui/open_checklist.json";
+    const CHECKLIST_URL = BASE + "/ui/checklist.json";
 
 /* ================= UTILS ================= */
 
@@ -174,15 +175,19 @@ btnCheck.onclick = async () => {
   } catch {}
 }, 500); */
 
-setInterval(async () => {
-  const r = await fetch(OPEN_CHECKLIST_URL);
-  const open = await r.json();
-  console.log("POLL open_checklist =", open);
 
-  if (open === true) {
-    console.log("APRO CHECKLIST");
-    window.location.href = "checklist.html";
-  }
+
+
+
+setInterval(async () => {
+  try {
+    const r = await fetch(CHECKLIST_URL);
+    const open = await r.json();
+
+    if (open === true) {
+      window.location.href = "checklist.html";
+    }
+  } catch {}
 }, 500);
 
   
