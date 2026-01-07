@@ -177,7 +177,7 @@ btnCheck.onclick = async () => {
       // consuma flag
       await fbSet(OPEN_CHECKLIST_URL, null);
 
-      window.location.href = "checklist.html";
+      window.location.href = "checklist-1.html";
     }
   } catch {}
 }, 500); */
@@ -190,7 +190,7 @@ setInterval(async () => {
     const open = await r.json();
 
     if (open === true) {
-      window.location.href = "checklist.html";
+      window.location.href = "checklist-1.html";
     }
   } catch {}
 }, 500);
