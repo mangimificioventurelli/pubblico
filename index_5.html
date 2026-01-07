@@ -189,7 +189,7 @@ setInterval(async () => {
     const r = await fetch(CHECKLIST_URL);
     const open = await r.json();
 
-    if (open === true) {
+    if (open === 1 || open === true) {
       window.location.href = "checklist-1.html";
     }
   } catch {}
