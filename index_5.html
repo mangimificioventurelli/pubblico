@@ -80,6 +80,7 @@ button {
     <button class="btn-stop"  id="btnStop">STOP</button>
     <button class="btn-reset" id="btnReset">RESET ALLARMI</button>
     <button class="btn-check hidden" id="btnCheck">CHECKLIST</button>
+    
   </div>
 
   <div id="info"></div>
@@ -146,6 +147,12 @@ setInterval(async () => {
 
 /* ================= COMANDI ================= */
 
+
+  document.getElementById("btnCheck").onclick = async () => {
+  document.getElementById("info").innerText = "⏳ Preparazione checklist...";
+  await sendCmd("checklist");
+};
+
 async function sendCmd(cmd) {
   await fbSet(CMD_URL, cmd);
 }
@@ -174,8 +181,6 @@ btnCheck.onclick = async () => {
     }
   } catch {}
 }, 500); */
-
-
 
 
 
