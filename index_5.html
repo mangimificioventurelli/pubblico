@@ -169,9 +169,9 @@ btnCheck.onclick = async () => {
 
 /* ================= UNICO TRIGGER CHECKLIST ================= */
 
-/*setInterval(async () => {
+setInterval(async () => {
   try {
-    const open = await fbGet(OPEN_CHECKLIST_URL);
+    const open = await fbGet(CHECKLIST_URL);
 
     if (open === true) {
       // consuma flag
@@ -180,11 +180,11 @@ btnCheck.onclick = async () => {
       window.location.href = "checklist-1.html";
     }
   } catch {}
-}, 500); */
+}, 500); 
 
 
 
-setInterval(async () => {
+/*setInterval(async () => {
   try {
     const r = await fetch(CHECKLIST_URL);
     const open = await r.json();
@@ -193,7 +193,7 @@ setInterval(async () => {
       window.location.href = "checklist-1.html";
     }
   } catch {}
-}, 500);
+}, 500);*/
 
   
 
