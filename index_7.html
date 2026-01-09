@@ -199,17 +199,28 @@ setInterval(async () => {
 }, 500); 
 */
 
+
+
 setInterval(async () => {
   try {
-    const r = await fetch(CHECKLIST_URL);
+    const r = await fetch(BASE + "/ui/checklist.json", { cache: "no-store" });
     const open = await r.json();
 
-    if (open === 1 || open === true) {
+    if (open === true || open === 1) {
+      // consuma il flag
+      await fetch(BASE + "/ui/checklist.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: "null"
+      });
+
       window.location.href = "partenza_051.html";
     }
-  } catch {}
+  } catch (e) {
+    console.error("poll checklist:", e);
+  }
 }, 500);
-
+  
   
 
 </script>
