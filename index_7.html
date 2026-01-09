@@ -171,7 +171,18 @@ btnCheck.onclick = async () => {
 /* ================= UNICO TRIGGER CHECKLIST ================= */
 
 
+setInterval(async () => {
+  try {
+    const open = await fbGet("/ui/checklist");
 
+    if (open === true || open === 1) {
+      // consuma il flag
+      await fbSet("/ui/checklist", null);
+
+      window.location.href = "partenza_051.html";
+    }
+  } catch {}
+}, 500);
 
 /*  
 setInterval(async () => {
@@ -180,7 +191,7 @@ setInterval(async () => {
 
     if (open === true) {
       // consuma flag
-      await fbSet(OPEN_CHECKLIST_URL, null);
+      await fbSet(CHECKLIST_URL, null);
 
       window.location.href = "partenza_051.html";
     }
