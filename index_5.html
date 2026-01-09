@@ -165,7 +165,7 @@ btnCheck.onclick = async () => {
   document.getElementById("info").innerText =
     "⏳ Preparazione checklist...";
   await sendCmd("checklist");
-  window.location.href = "partenza_05.html"; /* aggiunto qui */
+  /*window.location.href = "partenza_05.html"; /* aggiunto qui */*/
 };
 
 /* ================= UNICO TRIGGER CHECKLIST ================= */
@@ -174,7 +174,7 @@ btnCheck.onclick = async () => {
 /*  await sendCmd("checklist");
 window.location.href = "partenza_05.html";*/
   
-  /*setInterval(async () => {
+  setInterval(async () => {
   try {
     const open = await fbGet(CHECKLIST_URL);
 
@@ -185,7 +185,7 @@ window.location.href = "partenza_05.html";*/
       window.location.href = "partenza_05.html";
     }
   } catch {}
-}, 500); */
+}, 500); 
 
 
 
