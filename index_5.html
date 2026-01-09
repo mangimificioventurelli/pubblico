@@ -165,13 +165,14 @@ btnCheck.onclick = async () => {
   document.getElementById("info").innerText =
     "⏳ Preparazione checklist...";
   await sendCmd("checklist");
+  window.location.href = "partenza_05.html"; /* aggiunto qui */
 };
 
 /* ================= UNICO TRIGGER CHECKLIST ================= */
 
 
-  await sendCmd("checklist");
-window.location.href = "partenza_05.html";
+/*  await sendCmd("checklist");
+window.location.href = "partenza_05.html";*/
   
   /*setInterval(async () => {
   try {
