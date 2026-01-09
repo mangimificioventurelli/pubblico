@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bilancia</title>
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #111;
+  color: #fff;
+  font-family: system-ui, sans-serif;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  gap: 24px;
+}
+
+#peso {
+  font-size: 72px;
+  font-weight: bold;
+}
+
+#stato {
+  font-size: 32px;
+  padding: 10px 20px;
+  background: #222;
+  border-radius: 12px;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 80%;
+  max-width: 360px;
+}
+
+button {
+  height: 70px;
+  font-size: 26px;
+  font-weight: bold;
+  border-radius: 16px;
+  border: none;
+  color: #fff;
+}
+
+.btn-start { background: #00a84f; }
+.btn-stop  { background: #d72626; }
+.btn-reset { background: #555; }
+.btn-check { background: #1e90ff; }
+
+.hidden { display: none; }
+
+#info {
+  margin-top: 10px;
+  font-size: 18px;
+  opacity: 0.9;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div id="peso">---</div>
+  <div id="stato">STATO: ---</div>
+
+  <div class="buttons">
+    <button class="btn-start" id="btnStart">START</button>
+    <button class="btn-stop"  id="btnStop">STOP</button>
+    <button class="btn-reset" id="btnReset">RESET ALLARMI</button>
+    <button class="btn-check hidden" id="btnCheck">CHECKLIST</button>
+    
+  </div>
+
+  <div id="info"></div>
+
+</div>
+
+<script>
+/* ================= CONFIG ================= */
+
+const BASE =
+  "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
+
+const PESO_URL  = BASE + "/peso.json";
+const STATO_URL = BASE + "/stato.json";
+const CMD_URL   = BASE + "/cmd.json";
+const OPEN_CHECKLIST_URL = BASE + "/ui/open_checklist.json";
+    const CHECKLIST_URL = BASE + "/ui/checklist.json";
+
+/* ================= UTILS ================= */
+
+async function fbGet(url) {
+  const r = await fetch(url);
+  return await r.json();
+}
+
+async function fbSet(url, val) {
+  await fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(val)
+  });
+}
+
+/* ================= PESO ================= */
+
+setInterval(async () => {
+  try {
+    const peso = await fbGet(PESO_URL);
+    if (peso !== null && peso !== "")
+      document.getElementById("peso").innerText = peso;
+  } catch {}
+}, 500);
+
+/* ================= STATO ================= */
+
+setInterval(async () => {
+  try {
+    let stato = await fbGet(STATO_URL);
+    if (!stato) return;
+
+    stato = String(stato).trim().toLowerCase();
+    document.getElementById("stato").innerText =
+      "STATO: " + stato.toUpperCase();
+
+    const btnCheck = document.getElementById("btnCheck");
+
+    if (stato === "automatico") {
+      btnCheck.classList.remove("hidden");
+    } else {
+      btnCheck.classList.add("hidden");
+    }
+  } catch {}
+}, 1000);
+
+/* ================= COMANDI ================= */
+
+
+  document.getElementById("btnCheck").onclick = async () => {
+  document.getElementById("info").innerText = "⏳ Preparazione checklist...";
+  await sendCmd("checklist");
+};
+
+async function sendCmd(cmd) {
+  await fbSet(CMD_URL, cmd);
+}
+
+btnStart.onclick = () => sendCmd("start");
+btnStop.onclick  = () => sendCmd("stop");
+btnReset.onclick = () => sendCmd("reset");
+
+btnCheck.onclick = async () => {
+  document.getElementById("info").innerText =
+    "⏳ Preparazione checklist...";
+  await sendCmd("checklist");
+};
+
+/* ================= UNICO TRIGGER CHECKLIST ================= */
+
+setInterval(async () => {
+  try {
+    const open = await fbGet(CHECKLIST_URL);
+
+    if (open === true) {
+      // consuma flag
+      await fbSet(OPEN_CHECKLIST_URL, null);
+
+      window.location.href = "partenza_05.html";
+    }
+  } catch {}
+}, 500); 
+
+
+
+/*setInterval(async () => {
+  try {
+    const r = await fetch(CHECKLIST_URL);
+    const open = await r.json();
+
+    if (open === 1 || open === true) {
+      window.location.href = "checklist-1.html";
+    }
+  } catch {}
+}, 500);*/
+
+  
+
+</script>
+
+</body>
+</html>
