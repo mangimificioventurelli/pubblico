@@ -174,7 +174,7 @@ btnCheck.onclick = async () => {
 /*  await sendCmd("checklist");
 window.location.href = "partenza_05.html";*/
   
-  setInterval(async () => {
+/*  setInterval(async () => {
   try {
     const open = await fbGet(CHECKLIST_URL);
 
@@ -185,20 +185,20 @@ window.location.href = "partenza_05.html";*/
       window.location.href = "partenza_05.html";
     }
   } catch {}
-}, 500); 
+}, 500); */
 
 
 
-/*setInterval(async () => {
+setInterval(async () => {
   try {
     const r = await fetch(CHECKLIST_URL);
     const open = await r.json();
 
     if (open === 1 || open === true) {
-      window.location.href = "checklist-1.html";
+      window.location.href = "partenza_05.html";
     }
   } catch {}
-}, 500);*/
+}, 500);
 
   
 
