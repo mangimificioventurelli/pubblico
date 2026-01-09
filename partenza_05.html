@@ -83,7 +83,8 @@ tr:hover {
 
 const FIREBASE =
   "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app";
-
+const LISTA_URL = "https://travasoventurelli-default-rtdb.europe-west1.firebasedatabase.app/partenza/lista.json";
+  
 /* ================= UTILS ================= */
 
 function norm(s) {
@@ -212,6 +213,22 @@ async function main() {
 }
 
 main();
+
+
+
+setInterval(async () => {
+  const r = await fetch(LISTA_URL);
+  const lista = await r.json();
+
+  if (!lista || Object.keys(lista).length === 0)
+    return; // ⏳ attesa
+
+  renderLista(lista);
+
+  // ❌ NON cancellarla qui
+}, 500);
+
+  
 </script>
 
 </body>
