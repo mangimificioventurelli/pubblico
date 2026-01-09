@@ -187,9 +187,22 @@ window.location.href = "partenza_05.html";*/
   } catch {}
 }, 500); */
 
+  setInterval(async () => {
+  try {
+    const open = await fbGet(CHECKLIST_URL);
+
+    if (open === true) {
+      // consuma flag
+      await fbSet(OPEN_CHECKLIST_URL, null);
+
+      window.location.href = "partenza_05.html";
+    }
+  } catch {}
+}, 500); 
 
 
-setInterval(async () => {
+
+/*setInterval(async () => {
   try {
     const r = await fetch(CHECKLIST_URL);
     const open = await r.json();
@@ -198,7 +211,7 @@ setInterval(async () => {
       window.location.href = "partenza_05.html";
     }
   } catch {}
-}, 500);
+}, 500);*/
 
   
 
