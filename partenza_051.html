@@ -198,12 +198,12 @@ async function main() {
         part: this.dataset.part,
         dest: this.dataset.dest,
         ts: Date.now()
-
-          //aggiunto queste righe per tornare a index
+      
+      };
+        // AGGIUNTA QUESTA PARTE
         await fbSet("/partenza/select", payload);
         window.location.href = "index_5.html";
-      };
-
+      
        // DEBUG CONSIGLIATISSIMO
   console.log(typeof payload.idx, payload.idx);
   console.log(typeof payload.ts, payload.ts);
@@ -213,8 +213,8 @@ async function main() {
     };
 
     tbody.appendChild(tr);
-  }
-}
+  
+
 
 main();
 </script>
