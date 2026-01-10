@@ -206,13 +206,24 @@ async function main() {
   console.log(typeof payload.ts, payload.ts);
 
       console.log("SCRIVO FIREBASE:", payload);
-      await fbSet("/partenza/select", payload);
-
-// AGGIUNTA QUESTA PARTE
-       
-        window.location.href = "index_7.html";
-      
+      await fbSet("/partenza/select", payload);     
+           
     };
+
+
+    document.getElementById("btnBack").onclick = async () => {
+
+  // ❌ NON toccare /dest/prodotto
+  // ❌ NON toccare dati OCR DEST
+
+  // ✅ reset SOLO checklist / partenza
+  await fbSet("/partenza/select", null);
+  await fbSet("/partenza/lista", null);
+  await fbSet("/ui/checklist", null);
+
+  // ritorno a index
+  window.location.href = "index_7.html";
+};
 
     tbody.appendChild(tr);
   
