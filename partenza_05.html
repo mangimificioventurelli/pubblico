@@ -55,6 +55,25 @@ tr.selected {
 tr:hover {
   background: #2a2a2a;
 }
+
+.btn-back {
+  margin: 20px auto 0;
+  display: block;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 14px;
+  border: none;
+  background: #555;
+  color: #fff;
+  cursor: pointer;
+}
+
+.btn-back:active {
+  transform: scale(0.97);
+  opacity: 0.85;
+}
+  
 </style>
 </head>
 
@@ -77,6 +96,10 @@ tr:hover {
 </thead>
 <tbody></tbody>
 </table>
+
+  <button id="btnBack" class="btn-back">
+  ⬅ Torna a Start / Stop
+</button>
 
 <script>
 /* ================= CONFIG ================= */
@@ -214,19 +237,22 @@ async function main() {
   }, 300);
 };
 
+  
     document.getElementById("btnBack").onclick = async () => {
 
-  // ❌ NON toccare /dest/prodotto
-  // ❌ NON toccare dati OCR DEST
+  // ❌ NON tocchiamo /dest/prodotto
+  // ❌ NON tocchiamo OCR DEST
 
   // ✅ reset SOLO checklist / partenza
   await fbSet("/partenza/select", null);
   await fbSet("/partenza/lista", null);
   await fbSet("/ui/checklist", null);
 
-  // ritorno a index
+  // 🔙 ritorno a index
   window.location.href = "index_7.html";
 };
+    
+
 
     tbody.appendChild(tr);
   }
