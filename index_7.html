@@ -206,7 +206,7 @@ setInterval(async () => {
     const r = await fetch(BASE + "/ui/checklist.json", { cache: "no-store" });
     const open = await r.json();
 
-    if (open === true || open === 1) {
+    if (open === true || open === "1") {
       // a qui
 window.location.href = "partenza_051.html";  
       
