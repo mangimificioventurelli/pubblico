@@ -200,16 +200,18 @@ async function main() {
         ts: Date.now()
       
       };
-        // AGGIUNTA QUESTA PARTE
-        await fbSet("/partenza/select", payload);
-        window.location.href = "index_5.html";
-      
+              
        // DEBUG CONSIGLIATISSIMO
   console.log(typeof payload.idx, payload.idx);
   console.log(typeof payload.ts, payload.ts);
 
       console.log("SCRIVO FIREBASE:", payload);
       await fbSet("/partenza/select", payload);
+
+// AGGIUNTA QUESTA PARTE
+        await fbSet("/partenza/select", payload);
+        window.location.href = "index_5.html";
+      
     };
 
     tbody.appendChild(tr);
