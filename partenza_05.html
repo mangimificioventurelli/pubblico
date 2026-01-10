@@ -187,26 +187,32 @@ async function main() {
     tr.dataset.dest = destProd;
 
     // ✅ UNA SOLA ONCLICK
-    tr.onclick = async function () {
+   tr.onclick = async function () {
 
-      document.querySelectorAll("#tbl tr")
-        .forEach(r => r.classList.remove("selected"));
-      this.classList.add("selected");
+  // 1️⃣ evidenzia visivamente
+  document.querySelectorAll("#tbl tr")
+    .forEach(r => r.classList.remove("selected"));
+  this.classList.add("selected");
 
-      const payload = {
-        idx: Number(this.dataset.idx),
-        part: this.dataset.part,
-        dest: this.dataset.dest,
-        ts: Date.now()
-      };
+  // 2️⃣ payload COMPLETO
+  const payload = {
+    idx: Number(this.dataset.idx),
+    part: this.dataset.part,
+    dest: this.dataset.dest,
+    ts: Date.now()
+  };
 
-       // DEBUG CONSIGLIATISSIMO
-  console.log(typeof payload.idx, payload.idx);
-  console.log(typeof payload.ts, payload.ts);
+  // 3️⃣ DEBUG (tienili, sono utilissimi)
+  console.log("SCRIVO FIREBASE:", payload);
 
-      console.log("SCRIVO FIREBASE:", payload);
-      await fbSet("/partenza/select", payload);
-    };
+  // 4️⃣ scrivi selezione per AHK
+  await fbSet("/partenza/select", payload);
+
+  // 5️⃣ piccolo delay di sicurezza (importantissimo)
+  setTimeout(() => {
+    window.location.href = "index_7.html";
+  }, 300);
+};
 
     tbody.appendChild(tr);
   }
@@ -214,20 +220,7 @@ async function main() {
 
 main();
 
-/*
 
-setInterval(async () => {
-  const r = await fetch(LISTA_URL);
-  const lista = await r.json();
-
-  if (!lista || Object.keys(lista).length === 0)
-    return; // ⏳ attesa
-
-  renderLista(lista);
-
-  // ❌ NON cancellarla qui
-}, 500);
-*/
   
 </script>
 
