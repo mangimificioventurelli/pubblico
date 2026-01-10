@@ -214,6 +214,20 @@ async function main() {
   }, 300);
 };
 
+    document.getElementById("btnBack").onclick = async () => {
+
+  // ❌ NON toccare /dest/prodotto
+  // ❌ NON toccare dati OCR DEST
+
+  // ✅ reset SOLO checklist / partenza
+  await fbSet("/partenza/select", null);
+  await fbSet("/partenza/lista", null);
+  await fbSet("/ui/checklist", null);
+
+  // ritorno a index
+  window.location.href = "index.html";
+};
+
     tbody.appendChild(tr);
   }
 }
