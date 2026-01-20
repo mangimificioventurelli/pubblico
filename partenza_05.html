@@ -97,9 +97,11 @@ tr:hover {
 <tbody></tbody>
 </table>
 
-  <button id="btnBack" class="btn-back">
-  ⬅ Torna a Start / Stop
+<button id="btnBack" class="btn-back">
+  ⬅ Torna a schermata principale
 </button>
+
+
 
 <script>
 /* ================= CONFIG ================= */
@@ -238,17 +240,20 @@ async function main() {
 };
 
   
-    document.getElementById("btnBack").onclick = async () => {
+document.getElementById("btnBack").onclick = async () => {
 
-  // ❌ NON tocchiamo /dest/prodotto
-  // ❌ NON tocchiamo OCR DEST
-
-  // ✅ reset SOLO checklist / partenza
+  // 🔴 RESET SOLO LE COSE DI CHECKLIST
+  await fbSet("/ui/checklist", null);
   await fbSet("/partenza/select", null);
   await fbSet("/partenza/lista", null);
-  await fbSet("/ui/checklist", null);
 
-  // 🔙 ritorno a index
+  // ⚠️ NON TOCCARE /dest/prodotto
+  // ⚠️ NON TOCCARE OCR
+
+  // 🔔 avvisa AHK che deve tornare indietro
+  await fbSet("/cmd", "abort_checklist");
+
+  // torna a index
   window.location.href = "index_7.html";
 };
     
