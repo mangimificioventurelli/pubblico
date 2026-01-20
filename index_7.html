@@ -114,12 +114,25 @@ async function fbSet(url, val) {
   });
 }
 
+
+ // 🔑 unwrap per evitare [object Object]
+function unwrap(v) {
+  if (v === null || v === undefined) return "";
+  if (typeof v === "object") {
+    if ("val" in v) return v.val;
+    if ("value" in v) return v.value;
+    return "";
+  }
+  return v;
+}
+
 /* ================= PESO ================= */
 
 setInterval(async () => {
   try {
-    const peso = await fbGet(PESO_URL);
-    if (peso !== null && peso !== "")
+    const raw = await fbGet(PESO_URL);
+    const peso = unwrap(raw);
+    if (peso !== "")
       document.getElementById("peso").innerText = peso;
   } catch {}
 }, 500);
@@ -128,20 +141,23 @@ setInterval(async () => {
 
 setInterval(async () => {
   try {
-    let stato = await fbGet(STATO_URL);
+    const raw = await fbGet(STATO_URL);
+    const stato = unwrap(raw);
+
     if (!stato) return;
 
-    stato = String(stato).trim().toLowerCase();
     document.getElementById("stato").innerText =
-      "STATO: " + stato.toUpperCase();
+      "STATO: " + String(stato).toUpperCase();
 
     const btnCheck = document.getElementById("btnCheck");
 
-    if (stato === "automatico") {
+    // mostra checklist solo se ha senso
+    if (String(stato).toLowerCase() === "automatico") {
       btnCheck.classList.remove("hidden");
     } else {
       btnCheck.classList.add("hidden");
     }
+
   } catch {}
 }, 1000);
 
@@ -167,38 +183,6 @@ btnCheck.onclick = async () => {
   await sendCmd("checklist");
 //  window.location.href = "partenza_051.html"; 
 };
-
-/* ================= UNICO TRIGGER CHECKLIST ================= */
-
-/*
-setInterval(async () => {
-  try {
-    const open = await fbGet("/ui/checklist");
-
-    if (open === true || open === 1) {
-      // consuma il flag
-      await fbSet("/ui/checklist", null);
-
-      window.location.href = "partenza_051.html";
-    }
-  } catch {}
-}, 500);
-*/
-/*  
-setInterval(async () => {
-  try {
-    const open = await fbGet(CHECKLIST_URL);
-
-    if (open === true) {
-      // consuma flag
-      await fbSet(CHECKLIST_URL, null);
-
-      window.location.href = "partenza_051.html";
-    }
-  } catch {}
-}, 500); 
-*/
-
 
 
 setInterval(async () => {
