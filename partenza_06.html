@@ -188,7 +188,7 @@ document.getElementById("btnBack").onclick = async () => {
 
   try {
     await fbSet("/cmd", "abort_checklist");
-    await fbSet("/ui/checklist", false);
+    await fbSet("/ui/checklist", 0);
     await fbSet("/partenza/select", null);
     await fbSet("/partenza/lista", null);
   } catch (e) {
@@ -284,7 +284,7 @@ if (destProd && clean(prodotto) !== destProd) continue;
 /*document.getElementById("btnBack").onclick = async () => {
 
   // 🔴 RESET SOLO LE COSE DI CHECKLIST
-  await fbSet("/ui/checklist", null);
+  await fbSet("/ui/checklist", 0);
   await fbSet("/partenza/select", null);
   await fbSet("/partenza/lista", null);
 
