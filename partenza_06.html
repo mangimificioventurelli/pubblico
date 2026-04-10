@@ -177,6 +177,13 @@ async function main() {
   document.getElementById("destProd").textContent = destProd || "—";
 
   const data = await fbGet("/partenza/lista");
+
+if (!data || Object.keys(data).length === 0) {
+  document.querySelector("#tbl tbody").innerHTML =
+    `<tr><td colspan="4">NESSUN PRODOTTO DISPONIBILE</td></tr>`;
+}
+
+  
   if (!data || typeof data !== "object") return;
 
   const tbody = document.querySelector("#tbl tbody");
@@ -251,7 +258,7 @@ if (destProd && clean(prodotto) !== destProd) continue;
 };
 
   
-document.getElementById("btnBack").onclick = async () => {
+/*document.getElementById("btnBack").onclick = async () => {
 
   // 🔴 RESET SOLO LE COSE DI CHECKLIST
   await fbSet("/ui/checklist", null);
@@ -268,7 +275,23 @@ document.getElementById("btnBack").onclick = async () => {
   window.location.href = "index_7.html";
 };
     
+*/
 
+    document.getElementById("btnBack").onclick = async () => {
+
+  console.log("BACK CLICKED");
+
+  try {
+    await fbSet("/cmd", "abort_checklist");
+    await fbSet("/ui/checklist", false);
+    await fbSet("/partenza/select", null);
+    await fbSet("/partenza/lista", null);
+  } catch (e) {
+    console.log("Firebase error:", e);
+  }
+
+  window.location.href = "index_7.html";
+};
 
     tbody.appendChild(tr);
   }
